@@ -11,12 +11,18 @@ import org.neo4j.driver.v1.GraphDatabase;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 
-
+/**
+ * All implementations of Database functions for Neo4j
+ * @author Josh
+ *
+ */
 public class Neo4jDatabase implements Database {
 	
+	//Objects to connect to the db
 	Driver driver;
     Session session; 
-
+    
+    //Variables passed to queries
 	static int averageMark;
 	static String LB;
 	static String UB;
@@ -28,40 +34,42 @@ public class Neo4jDatabase implements Database {
 	static String similarityCutoff;
 	static String similarityData;
 	
+	//Maps to store query results
     static Map<String, Integer> countsTable; // Stores the results from the count query on student graph
     static Map<String, ArrayList<String>> missingMustCourses; // Stores the results from the missing compulsory courses query on student graph
     static Map<String, ArrayList<String>> missingOptionalCourses; // Stores the results from the missing optional courses query on student graph
     static Map<String, ArrayList<String>> takenOptionalCourses; // Stores the results from the missing optional courses query on student graph
     static Map<String, ArrayList<String>> constraintTreeResult; // Stores the results from the query on the constraint tree
-    static Map<String, String> similarCourse;
-	static Map<String, String> similarMark;
-	static Map<String, String> filteredMark;
-	static Map<String, String> predictedPerformance;
+    static Map<String, String> similarCourse; // Stores the similar course students
+	static Map<String, String> similarMark; // Stores the similar mark students
+	static Map<String, String> filteredMark; // Stores the similar mark students filtered according to mark
+	static Map<String, String> predictedPerformance; // Stores the GPA and std dev results
 	
+	//Variables for similarity queries/ output
     static String minSimilarCourses;
-	
 	static String similarCourseStudents;
 	static String similarCourseStudentsSize;
-	
 	static String similarMarkStudents;
 	static String similarMarkStudentsSize;
-	
 	static String filteredMarkStudents;
 	static String filteredMarkStudentsSize;
 	
-	static String gradeLB;
-	static String gradeUB;
-	
-	static String GPA;
-	static String standardDeviation;
-	
+	/**
+	 * Create a new connection to Neo4j database and set parameters for the corresponding queries
+	 * @param year The year the student is about to start, this affects the algorithms & nodes queried
+	 * @param marks The user input marks which affect the LB and UB parameters of queries
+	 */
 	public Neo4jDatabase(String year, int[] marks) {
+		//Create a connection
 		driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "password"));
         session = driver.session();
 		
+        //Set average mark and LB, UB
 		averageMark = average(marks);
 		LB = Integer.toString(averageMark - 5);
 		UB = Integer.toString(averageMark + 5);
+		
+		//Set query parameters which depend on year
 		if(year.equals("1")) {
 			algorithm = "euclidean";
 			inputMark = "NBT";
@@ -90,18 +98,23 @@ public class Neo4jDatabase implements Database {
 					"WITH s, average, {item:id(s), weights: collect(average)} as userData\r\n";
 		}
 		
+		//Initialize result tables
 		countsTable = new HashMap<String,Integer>();
 		missingMustCourses = new HashMap<String,ArrayList<String>>();
 		missingOptionalCourses = new HashMap<String,ArrayList<String>>();
 		takenOptionalCourses = new HashMap<String,ArrayList<String>>();
 		constraintTreeResult = new HashMap<String,ArrayList<String>>();
-		
 		similarCourse = new HashMap<String, String>();
 		similarMark = new HashMap<String, String>();
 		filteredMark = new HashMap<String, String>();
 		predictedPerformance = new HashMap<String, String>();
 	}
 	
+	/**
+	 * Function to calculate a student's average input mark
+	 * @param list A list of marks
+	 * @return The average of the list of marks
+	 */
 	public int average(int[] list) {
 		int sum = 0;
 		for(int m : list) {
@@ -110,6 +123,11 @@ public class Neo4jDatabase implements Database {
 		return sum/list.length;
 	}
 	
+	/**
+	 * Function to convert a Neo4j list to an Array representation
+	 * @param Tn A Neo4j query result string
+	 * @return The array version of a Neo4j list
+	 */
 	public static ArrayList<String> toList(String in){
 		String withoutBrackets = in.replace("[", "").replace("]", "").replace(" ", ""); // remove brackets and whitespace
 		ArrayList<String> newList = new ArrayList<String>(Arrays.asList(withoutBrackets.split(",")));
@@ -117,6 +135,7 @@ public class Neo4jDatabase implements Database {
 		return newList;
 	}
 
+	//retrieve course counts using input curriculum
 	public String getCourseCounts(String curriculum) {
 		try {
 			StatementResult result = session.run("MATCH (c: Course)\r\n" + 
@@ -205,7 +224,8 @@ public class Neo4jDatabase implements Database {
 			return null;
 		}
 	}
-
+	
+	//return true if any courses are missing from the curriculum
 	public boolean getMissingCourses(String curriculum) {
 		try {
 			StatementResult result = session.run(
@@ -305,8 +325,10 @@ public class Neo4jDatabase implements Database {
 			return true;
 		}
 	}
-
+	
+	//return true if the terminal of the constraint checking tree is "Meets Requirements"
 	public boolean checkCounts(String counts) {
+		//send the counts to the constraint checking tree
 	    StatementResult result = session.run(
 	            		"WITH "+ counts +" as curriculum\r\n" + 
 	            		"MATCH p = (q:Decision:Question {start: 1})-[d:Decision*]->(t:Decision:Terminal)\r\n" + 
@@ -340,7 +362,8 @@ public class Neo4jDatabase implements Database {
 	    	return true;
 	    }
 	}
-
+	
+	//retrieve list of students who have the same courses
 	public String getSimilarCourseStudents(String curriculum, String minSimilarCourses) {
 		try {
 			StatementResult courseResult = session.run(
@@ -376,7 +399,8 @@ public class Neo4jDatabase implements Database {
 			return null;
 		}
 	}
-
+	
+	//retrieve list of students who have the same marks
 	public String getSimilarMarkStudents(String similarCourseStudents) {
 		try {
 			StatementResult studentResult = session.run(
@@ -437,7 +461,8 @@ public class Neo4jDatabase implements Database {
 			return null;
 		}
 	}
-
+	
+	//retrieve GPA of similar students
 	public void predictGrade(String similarMarkStudents) {
 		try {
 			StatementResult GPAResult = session.run(
@@ -454,8 +479,8 @@ public class Neo4jDatabase implements Database {
 			    }
 			}
 					
-			GPA = predictedPerformance.get("GPA");
-			standardDeviation = predictedPerformance.get("standardDeviation");
+			String GPA = predictedPerformance.get("GPA");
+			String standardDeviation = predictedPerformance.get("standardDeviation");
 			
 			System.out.println("+--------------------------------------------------------------------------------------------------------------------------------------+");
 			System.out.println("| The average "+ predictedMark +" of " + filteredMarkStudentsSize + " students with a "+ inputMark +" and curriculum similar to you is " + GPA + " with a standard deviation of " + standardDeviation +".");
@@ -466,6 +491,7 @@ public class Neo4jDatabase implements Database {
 		}
 	}
 
+	//close the db connection
 	@Override
 	public void close() {
 		// close student data graph

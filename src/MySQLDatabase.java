@@ -8,9 +8,11 @@ import java.util.Collection;
 
 public class MySQLDatabase implements Database {
 	
+	//Objects to connect to the db
 	Connection conn;
 	Statement st;
 	
+	//Variables passed to queries
 	String nextYear;
 	static String currentYear;
 	static int averageMark;
@@ -20,21 +22,17 @@ public class MySQLDatabase implements Database {
 	static String inputMark;
 	static String predictedMark;
 	
+	//Variables for similarity queries/ output
 	static String curriculum;
 	static String minSimilarCourses;
-	
 	static String similarCourseStudents;
 	static String similarCourseStudentsSize;
-	
 	static String similarMarkStudents;
 	static String similarMarkStudentsSize;
-	
-	static String gradeLB;
-	static String gradeUB;
-	
 	static String GPA;
 	static String standardDeviation;
 	
+	//variables used for constraint checking
 	static int s1y1 ;
 	static int s2y1 ;
 	static int firstYearHalfCourses ;
@@ -68,13 +66,22 @@ public class MySQLDatabase implements Database {
 	static int firstYearHalfCoursesNQF;
 	static int seniorYearHalfCoursesNQF ;
 	
+	//Lists to store query results
 	static ArrayList<String> missingMustCourses = new ArrayList<String>();
 	static ArrayList<String> coursesNotEnrolledIn = new ArrayList<String>();
 	static ArrayList<String> combinationsNotEnrolledIn = new ArrayList<String>();
 	static ArrayList<String> coursesEnrolledIn = new ArrayList<String>();
 	static ArrayList<String> combinationsEnrolledIn = new ArrayList<String>();
-
+	
+	
+	/**
+	 * Create a new connection to a MySQL database and set parameters for the corresponding queries
+	 * @param nextYear The year the student is about to start, this affects the algorithms & nodes queried
+	 * @param inputMarks The user input marks which affect the LB and UB parameters of queries
+	 * @throws SQLException
+	 */
 	public MySQLDatabase(String nextYear, int[] inputMarks) throws SQLException {
+		//access the db
 		try {
 			String myDriver = "com.mysql.cj.jdbc.Driver";
 			String myUrl = "jdbc:mysql://localhost:3306/UCT Data";
@@ -86,11 +93,13 @@ public class MySQLDatabase implements Database {
 			System.out.println("Error connecting to SQL database.");
 		}
 		
+		//calculate average grade, LB, UB
 		this.nextYear = nextYear;
 		averageMark = average(inputMarks);
 		LB = Integer.toString(averageMark - 5);
 		UB = Integer.toString(averageMark + 5);
 		
+		//Set query parameters affected by year
 		if(nextYear.equals("1")) {
 			currentYear = "0";
 			query = "NBT";
@@ -106,9 +115,21 @@ public class MySQLDatabase implements Database {
 			query = "GPA";
 			inputMark = "second year GPA";
 			predictedMark = "third year GPA";
-		}		
+		}
+		
+		//initalize result lists
+		missingMustCourses = new ArrayList<String>();
+		coursesNotEnrolledIn = new ArrayList<String>();
+		combinationsNotEnrolledIn = new ArrayList<String>();
+		coursesEnrolledIn = new ArrayList<String>();
+		combinationsEnrolledIn = new ArrayList<String>();
 	}
 	
+	/**
+	 * Function to calculate a student's average input mark
+	 * @param list A list of marks
+	 * @return The average of the list of marks
+	 */
 	public int average(int[] list) {
 		int sum = 0;
 		for(int m : list) {
@@ -117,9 +138,10 @@ public class MySQLDatabase implements Database {
 		return sum/list.length;
 	}
 	
+	//retrieve course counts using input curriculum
 	@Override
 	public String getCourseCounts(String curriculum) {
-		
+		//define the queries
 		String s1y1query = "select count(CourseID) as s1y1 from courses where courseName in ("+ curriculum +") and (Semester = 0 or Semester = 1) and courses.Year = 1 ;";
 		String s2y1query = "select count(CourseID) as s2y1 from courses where courseName in ("+ curriculum +") and (Semester = 0 or Semester = 2) and courses.Year = 1 ;";
 		String s1y2query = "select count(CourseID) as s1y2 from courses where courseName in ("+ curriculum +") and (Semester = 0 or Semester = 1) and courses.Year = 2 ;";
@@ -151,6 +173,7 @@ public class MySQLDatabase implements Database {
 		String s1y3NQFquery = "select coalesce(sum(Credits), 0) as s1y3NQF from courses where courseName in ("+ curriculum +") and Semester = 1 and courses.Year = 3 ;";
 		String s2y3NQFquery = "select coalesce(sum(Credits), 0) as s2y3NQF from courses where courseName in ("+ curriculum +") and Semester = 2 and courses.Year = 3 ;";
 		
+		//run queries and retrieve results
 		try {
 			ResultSet s1y1Result = st.executeQuery(s1y1query);
 		    while (s1y1Result.next()) {
@@ -277,13 +300,12 @@ public class MySQLDatabase implements Database {
 			System.out.println("Error retrieving SQL course counts.");
 			return "No Counts";
 		}
-		
-		
 	}
-
+	
+	//return true if any courses are missing from the curriculum
 	@Override
 	public boolean getMissingCourses(String curriculum) {
-		
+		//define the queries
 		String missingMustCoursesquery = "select c.CourseName as missingMustCourses \r\n" + 
 				"from courses c \r\n" + 
 				"right join requires r on r.CourseID = c.CourseID and Combination = 0 \r\n" + 
@@ -300,8 +322,9 @@ public class MySQLDatabase implements Database {
 				"and MajorID = \"CSC05\" \r\n" + 
 				"where c.CourseName is not null and c.CourseName in ("+ curriculum +");";
 		
+		//run the Course queries
 		try {
-			// MAJOR QUERIES
+			
 		    ResultSet missingMustCoursesResult = st.executeQuery(missingMustCoursesquery);
 		    while (missingMustCoursesResult.next()) {
 		    	missingMustCourses.add(missingMustCoursesResult.getString("missingMustCourses")); 
@@ -321,6 +344,7 @@ public class MySQLDatabase implements Database {
 			return true;
 		}
 		
+		//check that compulsory courses are taken and at least some optional courses z
 	    if (!missingMustCourses.isEmpty()) {
 	    	System.out.println("Missing the following course(s): "+ missingMustCourses.toString());
 	    	return true;
@@ -343,7 +367,8 @@ public class MySQLDatabase implements Database {
 	    }
 	    return false;
 	}
-
+	
+	//return true if the counts pass all if-statements
 	@Override
 	public boolean checkCounts(String counts) {
     	System.out.println("+------------------------------------+");
@@ -416,9 +441,11 @@ public class MySQLDatabase implements Database {
     	System.out.println("+------------------------------------+\r\n");
     	return true;
 	}
-
+	
+	//retrieve list of students who have the same courses
 	@Override
 	public String getSimilarCourseStudents(String curriculum, String minSimilarCourses) {
+		//define query to find students with 50% of the same courses
 		String similarCourseQuery = 
 				"select StudentID  from coursemarks cm \r\n" + 
 				"inner join courses c on c.CourseID = cm.CourseID\r\n" + 
@@ -451,6 +478,7 @@ public class MySQLDatabase implements Database {
 		}
 	}
 
+	//retrieve list of students who have the same marks
 	@Override
 	public String getSimilarMarkStudents(String similarCourseStudents) {
 		// Using students from above, find the students with NBT marks in similar range to student's input mark
@@ -490,7 +518,7 @@ public class MySQLDatabase implements Database {
 		    similarMarkStudentsSize = Integer.toString(count);
 		    
 		    System.out.println("+------------------------------------------------------------------------------------------------------------+");
-			System.out.println("| Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + similarMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +")");
+			System.out.println("| Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + similarMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +").");
 			System.out.println("+------------------------------------------------------------------------------------------------------------+\r\n");
 			return similarMarkStudents;
 		}catch (Exception e) {
@@ -501,9 +529,10 @@ public class MySQLDatabase implements Database {
 		}
 	}
 
+	//retrieve GPA of similar students
 	@Override
 	public void predictGrade(String similarMarkStudents) {
-		// Using the filtered list of students (similiar course & marks), output their predicted next year performance
+		// Using the filtered list of students (similar course & marks), output their predicted next year performance
 		String predictedMarkQuery = 
 				"Select avg(Mark) as GPA, stddev(Mark) as standardDeviation from coursemarks cm \r\n" + 
 				"right join Courses c on c.CourseID = cm.CourseID\r\n" + 
@@ -525,13 +554,11 @@ public class MySQLDatabase implements Database {
 			System.out.println("Error predicting SQL grade.");
 		}
 	}
-
+	
+	//close the db connection
 	@Override
 	public void close() throws SQLException {
 		st.close();
 	}
-
-
-
 
 }
