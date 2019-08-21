@@ -188,5 +188,6 @@
 	<classpathentry kind="lib" path="C:/Users/Josh/.Neo4jDesktop/neo4jDatabases/database-54d3d1a8-5b19-46b7-9108-e439bb60600a/installation-3.5.8/lib/zstd-proxy-3.5.8.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Josh/.Neo4jDesktop/neo4jDatabases/database-54d3d1a8-5b19-46b7-9108-e439bb60600a/installation-3.5.8/plugins/apoc-3.5.0.4.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Josh/.Neo4jDesktop/neo4jDatabases/database-54d3d1a8-5b19-46b7-9108-e439bb60600a/installation-3.5.8/plugins/graphAlgorithms-3.5.7.0.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files (x86)/MySQL/Connector J 8.0/mysql-connector-java-8.0.17.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

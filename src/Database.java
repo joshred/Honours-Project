@@ -1,10 +1,12 @@
+import java.sql.SQLException;
 
 public interface Database {
+	
 	public String getCourseCounts(String curriculum);
 
 	public boolean getMissingCourses(String curriculum);
 	
-	public boolean traverseTree(String counts);
+	public boolean checkCounts(String counts);
 
 	public String getSimilarCourseStudents(String curriculum, String minSimilarCourses);
 
@@ -12,6 +14,6 @@ public interface Database {
 
 	public void predictGrade(String similarMarkStudents);
 	
-	public void close();
+	public void close() throws SQLException;
 
 }

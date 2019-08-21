@@ -1,7 +1,12 @@
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 
+/**
+ * @author Josh
+ *
+ */
 public class Driver {
 	
 	static Scanner s;
@@ -27,11 +32,19 @@ public class Driver {
 	static String similarStudents;
 	static String gradePrediction;
 	
+	/**
+	 * @param c
+	 * @return
+	 */
 	public static String formatCurriculum(String[] c) {
 		String temp = "\"" +  Arrays.toString(c).replace("[", "").replace("]", "") + "\"";
 		return temp.replace(",", "\",\"").replace(" ", "");
 	}
 	
+	/**
+	 * @param crs
+	 * @return
+	 */
 	public static String similarCourseCutoff (String crs) {
 		String[] courses = crs.split(" ");
 		ArrayList<String> lst = new ArrayList<String>(Arrays.asList(courses));
@@ -39,7 +52,11 @@ public class Driver {
 		return Integer.toString(length);
 	}
 	
-	public static void main(String[] args) {
+	/**
+	 * @param args
+	 * @throws SQLException
+	 */
+	public static void main(String[] args) throws SQLException {
 
 		//Get User input
 		s = new Scanner(System.in);
@@ -113,22 +130,38 @@ public class Driver {
 			}catch (Exception e) {
 				System.out.println("Error. Ensure the database is running.");
 			}
-				
 		}else {
-			db = new MySQLDatabase(nextYear, inputMarks);
+			try {
+				db = new MySQLDatabase(nextYear, inputMarks);
+			}catch (Exception e) {
+				System.out.println("Error. Ensure the database is running.");
+			}
 		}
 		
 		//Check Course Counts
 		missingCourses = true;
 		passedRequirements = false;
 		
+		System.out.println("Retrieving compulsory courses...\r\n");
+		System.out.println("Checking compulsory course constraints...\r\n");
 		missingCourses = db.getMissingCourses(curriculum);
-		String counts = db.getCourseCounts(curriculum);
-		if(!missingCourses && counts != null) {
-			passedRequirements = db.traverseTree(counts);
+		
+		if(!missingCourses) {
+			System.out.println("+------------------------------------------------------------+");
+			System.out.println("| Curriculum meets all the course requirements of the Major. |");
+			System.out.println("+------------------------------------------------------------+\r\n");
+			System.out.println("Retrieving course counts...\r\n");
+			
+			String counts = db.getCourseCounts(curriculum);
+			System.out.println("Checking course count constraints...\r\n");
+			passedRequirements = db.checkCounts(counts);
 		}
 		
 		if(passedRequirements) {
+	    	System.out.println("+--------------------------+");
+	    	System.out.println("| Meets Count Requirements |");
+	    	System.out.println("+--------------------------+\r\n");
+	    	System.out.println("Finding similar students for grade prediction...\r\n");
 			similarCourseStudents = db.getSimilarCourseStudents(curriculum, similarCourseCutoff(Arrays.toString(inputCurriculum)));
 			if(similarCourseStudents != null) {
 				similarMarkStudents = db.getSimilarMarkStudents(similarCourseStudents);
@@ -136,7 +169,12 @@ public class Driver {
 			if(similarMarkStudents != null) {
 				db.predictGrade(similarMarkStudents);
 			}
+		}else {
+			System.out.println("+-----------------------------------+");
+	    	System.out.println("| Does Not Meet Count Requirements. |");
+	    	System.out.println("+-----------------------------------+\r\n");
 		}
+    	
 		
 		db.close();
 		

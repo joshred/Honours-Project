@@ -118,7 +118,6 @@ public class Neo4jDatabase implements Database {
 	}
 
 	public String getCourseCounts(String curriculum) {
-		System.out.println("Retrieving course counts...\r\n");
 		try {
 			StatementResult result = session.run("MATCH (c: Course)\r\n" + 
 	          		"WHERE c.CourseName IN ["+ curriculum +"]\r\n" + 
@@ -208,7 +207,6 @@ public class Neo4jDatabase implements Database {
 	}
 
 	public boolean getMissingCourses(String curriculum) {
-		System.out.println("Retrieving compulsory courses...\r\n");
 		try {
 			StatementResult result = session.run(
 		            		"MATCH (m: Major)-[:REQUIRES {type: \"Must\"}]->(c: Course)\r\n" + 
@@ -275,10 +273,14 @@ public class Neo4jDatabase implements Database {
 
 		    // Check if missing any courses
 		    if (!missingMustCourses.get("missingMustCourses").isEmpty()) {
-		    	System.out.println("Missing the following course(s): "+missingMustCourses.get("missingMustCourses"));
+		    	System.out.println("+---------------------------------------------------------+");
+		    	System.out.println("| Missing the following course(s): "+ missingMustCourses.get("missingMustCourses"));
+		    	System.out.println("+---------------------------------------------------------+\r\n");
 		    	return true;
 		    }if (takenOptionalCourses.get("combinationsEnrolledIn").isEmpty()) {
-		    	System.out.println("You must enroll in one or more of the following course(s): "+ missingOptionalCourses.get("coursesNotEnrolledIn"));
+		    	System.out.println("+---------------------------------------------------------+");
+		    	System.out.println("| You must enroll in one or more of the following course(s): "+ missingOptionalCourses.get("coursesNotEnrolledIn"));
+		    	System.out.println("+---------------------------------------------------------+\r\n");
 		    	return true;
 		    }
 		    
@@ -291,7 +293,9 @@ public class Neo4jDatabase implements Database {
 		    	String notEnrolledIn = (String) takenCombinations.toArray()[0];
 		    	int indexOfCourse = missingOptionalCourses.get("combinationsNotEnrolledIn").indexOf(notEnrolledIn);
 		    	String missingCourseCombination = missingOptionalCourses.get("coursesNotEnrolledIn").get(indexOfCourse);
-		    	System.out.println("Missing the other course component: "+ missingCourseCombination);
+		    	System.out.println("+---------------------------------------------------------+");
+		    	System.out.println("| Missing the other course component: "+ missingCourseCombination);
+		    	System.out.println("+---------------------------------------------------------+\r\n");
 		    	return true;
 		    }
 		    
@@ -302,10 +306,7 @@ public class Neo4jDatabase implements Database {
 		}
 	}
 
-	public boolean traverseTree(String counts) {
-		System.out.println("Curriculum meets all the course requirements of the Major.");
-	    System.out.println("Checking course count constraints...\r\n");
-	    
+	public boolean checkCounts(String counts) {
 	    StatementResult result = session.run(
 	            		"WITH "+ counts +" as curriculum\r\n" + 
 	            		"MATCH p = (q:Decision:Question {start: 1})-[d:Decision*]->(t:Decision:Terminal)\r\n" + 
@@ -327,21 +328,20 @@ public class Neo4jDatabase implements Database {
 		    }
 	    
 	    // Output the decisions made along the constraint path
+		System.out.println("+----------------------------------+");
 	    for (String description : constraintTreeResult.get("extractedDescriptions")) {
-	    	System.out.println(description);
+	    	System.out.println("| " + description);
 	    }
+	    System.out.println("+----------------------------------+\r\n");
 	    
 	    if(constraintTreeResult.get("Terminal").toString().equals("[DoesNotMeetRequirements]")) {
-	    	System.out.println("Does Not Meet Count Requirements");
 	    	return false;
 	    }else {
-	    	System.out.println("Meets Count Requirements");
 	    	return true;
 	    }
 	}
 
 	public String getSimilarCourseStudents(String curriculum, String minSimilarCourses) {
-		System.out.println("Finding Students with similar courses...\r\n");
 		try {
 			StatementResult courseResult = session.run(
 			        "MATCH (s:Student)-[:ENROLLED_IN]->(c:Course)\r\n" + 
@@ -366,8 +366,10 @@ public class Neo4jDatabase implements Database {
 				   
 			similarCourseStudents = similarCourse.get("similarCourseStudents");
 			similarCourseStudentsSize = similarCourse.get("similarCourseStudentsSize");
-				    
-			System.out.println("Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum");
+			
+			System.out.println("+----------------------------------------------------------------------------+");
+			System.out.println("| Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum. |");
+			System.out.println("+----------------------------------------------------------------------------+\r\n");
 			return similarCourseStudents;
 		}catch (Exception e) {
 			System.out.println("Error finding similar course students.");
@@ -376,7 +378,6 @@ public class Neo4jDatabase implements Database {
 	}
 
 	public String getSimilarMarkStudents(String similarCourseStudents) {
-		System.out.println("Finding Students with similar marks...\r\n");
 		try {
 			StatementResult studentResult = session.run(
 			    	"MATCH (s:Student), (c"+ similarNode +")\r\n" + 
@@ -402,7 +403,8 @@ public class Neo4jDatabase implements Database {
 			similarMarkStudents = similarMark.get("similarMarkStudents");
 			similarMarkStudentsSize = similarMark.get("similarMarkStudentsSize");
 			
-			System.out.println("Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + similarMarkStudentsSize + " pairs of students achieved similar marks");
+			System.out.println("+------------------------------------------------------------------------------------------------------+");
+			System.out.println("| Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + similarMarkStudentsSize + " pairs of students achieved similar marks");
 					
 			// Using students from above, find the students with average marks in similar range to student's input mark
 			StatementResult filteredMarkResult = session.run(
@@ -427,7 +429,8 @@ public class Neo4jDatabase implements Database {
 			filteredMarkStudents = filteredMark.get("filteredMarkStudents");
 			filteredMarkStudentsSize = filteredMark.get("filteredMarkStudentsSize");
 				
-			System.out.println("Of " + similarMarkStudentsSize + " students with similar marks, " + filteredMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +")");
+			System.out.println("| Of " + similarMarkStudentsSize + " students with similar marks, " + filteredMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +")");
+			System.out.println("+------------------------------------------------------------------------------------------------------+\r\n");
 			return filteredMarkStudents;
 		}catch (Exception e) {
 			System.out.println("Error finding similar mark students");
@@ -436,7 +439,6 @@ public class Neo4jDatabase implements Database {
 	}
 
 	public void predictGrade(String similarMarkStudents) {
-		System.out.println("Predicting grade...\r\n");
 		try {
 			StatementResult GPAResult = session.run(
 			    "MATCH (s:Student)-[r:ENROLLED_IN]->(c"+ performanceNode +")\r\n" + 
@@ -454,9 +456,11 @@ public class Neo4jDatabase implements Database {
 					
 			GPA = predictedPerformance.get("GPA");
 			standardDeviation = predictedPerformance.get("standardDeviation");
-					
-			System.out.println("The average "+ predictedMark +" of " + filteredMarkStudentsSize + " students with a "+ inputMark +" and curriculum similar to you is " + GPA + " with a standard deviation of " + standardDeviation);
-		
+			
+			System.out.println("+--------------------------------------------------------------------------------------------------------------------------------------+");
+			System.out.println("| The average "+ predictedMark +" of " + filteredMarkStudentsSize + " students with a "+ inputMark +" and curriculum similar to you is " + GPA + " with a standard deviation of " + standardDeviation +".");
+			System.out.println("+--------------------------------------------------------------------------------------------------------------------------------------+");
+
 		}catch (Exception e) {
 			System.out.println("Error predicting grade.");
 		}
