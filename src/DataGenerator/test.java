@@ -1,8 +1,11 @@
 package DataGenerator;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class test {
+	
+	static Random rand = new Random();
 	
 	static int godelEncoding(int[] IDs){
 		
@@ -29,7 +32,7 @@ public class test {
 		System.out.println(crs);
 		ArrayList<Integer> num  = CourseListBuilder.getCOMCourseIDs(crs);
 		System.out.println(num);
-		System.out.println(StudentBuilder.godelEncoding(num));
+		System.out.println(Math.round(51 + rand.nextFloat() * (61 - 51)));
 
 	}
 

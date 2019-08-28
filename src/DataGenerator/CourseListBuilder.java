@@ -119,15 +119,6 @@ public class CourseListBuilder {
 	}
 
 	public static void main(String[] args) {
-
-            
-//            for (Entry<String, ArrayList<String>> pair : COMcourses.entrySet()) {
-//            	System.out.println(pair.getKey() + " "+ pair.getValue().toString());
-//        	}
-//            for (Entry<String, ArrayList<Integer>> pair : COMcourseIDs.entrySet()) {
-//            	System.out.println(pair.getKey() + " "+ pair.getValue().toString());
-//        	}
-
          
 	}
 
