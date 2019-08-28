@@ -7,14 +7,14 @@ public interface Database {
 	 * @param curriculum The list of courses the counts are queried from
 	 * @return A list of counts to be checked against their limits
 	 */
-	public String getCourseCounts(String curriculum);
+	public String getCourseCounts();
 
 	/**
 	 * Determine if the curriculum is missing any optional or compulsory courses
 	 * @param curriculum The list of courses to be checked
 	 * @return true if any courses are missing, false otherwise
 	 */
-	public boolean getMissingCourses(String curriculum);
+	public boolean getMissingCourses();
 	
 	/**
 	 * Determine if any course counts violate their limits
@@ -29,7 +29,7 @@ public interface Database {
 	 * @param minSimilarCourses The minimum number of courses to have in common (50% of input curriculum)
 	 * @return A list of students who are similar according to courses
 	 */
-	public String getSimilarCourseStudents(String curriculum, String minSimilarCourses);
+	public String getSimilarCourseStudents(String minSimilarCourses);
 
 	/**
 	 * Retrieve a list of student numbers of students who have similar marks as the user input marks

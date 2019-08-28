@@ -23,6 +23,10 @@ public class Neo4jDatabase implements Database {
     Session session; 
     
     //Variables passed to queries
+    String major1;
+	String major2;
+	String curriculum;
+	String year;
 	static int averageMark;
 	static String LB;
 	static String UB;
@@ -57,13 +61,21 @@ public class Neo4jDatabase implements Database {
 	/**
 	 * Create a new connection to Neo4j database and set parameters for the corresponding queries
 	 * @param year The year the student is about to start, this affects the algorithms & nodes queried
+	 * @param major2 
+	 * @param major1 
+	 * @param curriculum 
 	 * @param marks The user input marks which affect the LB and UB parameters of queries
 	 */
-	public Neo4jDatabase(String year, int[] marks) {
+	public Neo4jDatabase(String year, String major1, String major2, String curriculum, int[] marks) {
 		//Create a connection
 		driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "password"));
         session = driver.session();
 		
+        this.major1 = major1; 
+        this.major2 = major2;
+        this.curriculum = curriculum;
+        this.year = year; 
+        
         //Set average mark and LB, UB
 		averageMark = average(marks);
 		LB = Integer.toString(averageMark - 5);
@@ -136,7 +148,7 @@ public class Neo4jDatabase implements Database {
 	}
 
 	//retrieve course counts using input curriculum
-	public String getCourseCounts(String curriculum) {
+	public String getCourseCounts() {
 		try {
 			StatementResult result = session.run("MATCH (c: Course)\r\n" + 
 	          		"WHERE c.CourseName IN ["+ curriculum +"]\r\n" + 
@@ -161,18 +173,18 @@ public class Neo4jDatabase implements Database {
 	          		"sum(size([f in courses where f.Faculty = \"SCI\"AND f.Semester = 0 and f.Year = 3])) as thirdSciFullFourses, \r\n" +
 	          		"sum(size([f in courses where (f.Semester = 1 or f.Semester = 2) and (f.Year = 2 OR f.Year = 3)])) as seniorHalfCourses, \r\n" + 
 	          		"sum(size([f in courses where (f.Semester = 0 and (f.Year = 2 OR f.Year = 3))])) as seniorFullCourses, \r\n" + 
-	          		"sum(reduce (acc1 = 0, tot IN extract(n in courses | n.Credits) | acc1 + tot)) AS totalNQF, \r\n" + 
-	          		"sum(reduce (acc2 = 0, tot IN extract(n in [k in courses where k.Faculty = \"SCI\"] | n.Credits) | acc2 + tot)) AS sciNQF, \r\n" + 
-	          		"sum(reduce (acc3 = 0, tot IN extract(n in [k in courses where k.Year = 3] | n.Credits) | acc3 + tot)) AS thirdNQF,\r\n" + 
-	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 0 and f.Year = 1] | n.Credits) | acc + tot)) as s0y1NQF,\r\n" + 
-	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 1 and f.Year = 1] | n.Credits) | acc + tot)) as s1y1NQF,\r\n" + 
-	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 2 and f.Year = 1] | n.Credits) | acc + tot)) as s2y1NQF,\r\n" + 
-	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 0 and f.Year = 2] | n.Credits) | acc + tot)) as s0y2NQF,\r\n" + 
-	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 1 and f.Year = 2] | n.Credits) | acc + tot)) as s1y2NQF,\r\n" + 
-	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 2 and f.Year = 2] | n.Credits) | acc + tot)) as s2y2NQF,\r\n" + 
-	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 0 and f.Year = 3] | n.Credits) | acc + tot)) as s0y3NQF,\r\n" + 
-	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 1 and f.Year = 3] | n.Credits) | acc + tot)) as s1y3NQF,\r\n" + 
-	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 2 and f.Year = 3] | n.Credits) | acc + tot)) as s2y3NQF");
+	          		"sum(reduce (acc1 = 0, tot IN extract(n in courses | n.NQFCredits) | acc1 + tot)) AS totalNQF, \r\n" + 
+	          		"sum(reduce (acc2 = 0, tot IN extract(n in [k in courses where k.Faculty = \"SCI\"] | n.NQFCredits) | acc2 + tot)) AS sciNQF, \r\n" + 
+	          		"sum(reduce (acc3 = 0, tot IN extract(n in [k in courses where k.Year = 3] | n.NQFCredits) | acc3 + tot)) AS thirdNQF,\r\n" + 
+	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 0 and f.Year = 1] | n.NQFCredits) | acc + tot)) as s0y1NQF,\r\n" + 
+	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 1 and f.Year = 1] | n.NQFCredits) | acc + tot)) as s1y1NQF,\r\n" + 
+	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 2 and f.Year = 1] | n.NQFCredits) | acc + tot)) as s2y1NQF,\r\n" + 
+	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 0 and f.Year = 2] | n.NQFCredits) | acc + tot)) as s0y2NQF,\r\n" + 
+	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 1 and f.Year = 2] | n.NQFCredits) | acc + tot)) as s1y2NQF,\r\n" + 
+	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 2 and f.Year = 2] | n.NQFCredits) | acc + tot)) as s2y2NQF,\r\n" + 
+	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 0 and f.Year = 3] | n.NQFCredits) | acc + tot)) as s0y3NQF,\r\n" + 
+	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 1 and f.Year = 3] | n.NQFCredits) | acc + tot)) as s1y3NQF,\r\n" + 
+	          		"sum(reduce (acc = 0, tot IN extract(n in [f in courses where f.Semester = 2 and f.Year = 3] | n.NQFCredits) | acc + tot)) as s2y3NQF");
 	        //Record record = result.next();
 	        
 	        while ( result.hasNext() ) {
@@ -226,10 +238,10 @@ public class Neo4jDatabase implements Database {
 	}
 	
 	//return true if any courses are missing from the curriculum
-	public boolean getMissingCourses(String curriculum) {
+	public boolean getMissingCourses() {
 		try {
 			StatementResult result = session.run(
-		            		"MATCH (m: Major)-[:REQUIRES {type: \"Must\"}]->(c: Course)\r\n" + 
+		            		"MATCH (m: Major)-[:REQUIRES {type: \"Compulsory\"}]->(c: Course)\r\n" + 
 		            		"WITH c, collect(c.CourseName) AS courses\r\n" + 
 		            		"UNWIND courses AS MustCourses\r\n" + 
 		            		"WITH MustCourses, ["+ curriculum +"] as cur //put planned curriculum here\r\n" + 
@@ -249,7 +261,7 @@ public class Neo4jDatabase implements Database {
 			    }
 		    
 			StatementResult result2 = session.run( 
-					"MATCH (m: Major)-[:REQUIRES {type: \"Optional\"}]->(c: Course)\r\n" + 
+					"MATCH (m: Major)-[:REQUIRES {type: \"Alternate\"}]->(c: Course)\r\n" + 
 					"WITH c, collect(c.CourseName) as courses\r\n" + 
 					"UNWIND courses as OptionalCourses\r\n" + 
 					"WITH OptionalCourses, ["+ curriculum +"] as cur\r\n" + 
@@ -270,7 +282,7 @@ public class Neo4jDatabase implements Database {
 			    } 
 		    
 			    StatementResult result3 = session.run( 
-		            		"match (m: Major)-[:REQUIRES {type: \"Optional\"}]->(c: Course)\r\n" + 
+		            		"match (m: Major)-[:REQUIRES {type: \"Alternate\"}]->(c: Course)\r\n" + 
 		            		"with c, collect(c.CourseName) as courses\r\n" + 
 		            		"unwind courses as OptionalCourses\r\n" + 
 		            		"with OptionalCourses, ["+ curriculum +"] as cur\r\n" + 
@@ -364,7 +376,7 @@ public class Neo4jDatabase implements Database {
 	}
 	
 	//retrieve list of students who have the same courses
-	public String getSimilarCourseStudents(String curriculum, String minSimilarCourses) {
+	public String getSimilarCourseStudents(String minSimilarCourses) {
 		try {
 			StatementResult courseResult = session.run(
 			        "MATCH (s:Student)-[:ENROLLED_IN]->(c:Course)\r\n" + 
@@ -402,34 +414,42 @@ public class Neo4jDatabase implements Database {
 	
 	//retrieve list of students who have the same marks
 	public String getSimilarMarkStudents(String similarCourseStudents) {
-		try {
-			StatementResult studentResult = session.run(
-			    	"MATCH (s:Student), (c"+ similarNode +")\r\n" + 
-			        "OPTIONAL MATCH (s)-[r:ENROLLED_IN]->(c)\r\n" + 
-			        "WHERE s.StudentID IN " + similarCourseStudents + "\r\n" + 
-			        similarityData + 
-			        "WITH collect(userData) as data\r\n" + 
-			        "CALL algo.similarity.euclidean.stream(data, {similarityCutoff: "+ similarityCutoff  +"})\r\n" + 
-			        "YIELD item1, item2, count1, count2, similarity\r\n" + 
-			        "RETURN apoc.coll.union(collect(algo.asNode(item1).StudentID),collect(algo.asNode(item2).StudentID)) AS similarMarkStudents, " +
-			        "size(apoc.coll.union(collect(algo.asNode(item1).StudentID),collect(algo.asNode(item2).StudentID))) AS similarMarkStudentsSize");
-				    
-			while ( studentResult.hasNext() ) {
-			// get the list of similar students according to marks
-			Map<String,Object> resultTable = studentResult.next().asMap();
-			            
-		    // create a new map of similar students and corresponding count
-			for (Entry<String,Object> pair : resultTable.entrySet()) {
-				similarMark.put(pair.getKey().toString(), pair.getValue().toString());
-			    }
+		if(year.equals("1")) {
+			try {
+				StatementResult studentResult = session.run(
+				    	"MATCH (s:Student), (c"+ similarNode +")\r\n" + 
+				        "OPTIONAL MATCH (s)-[r:ENROLLED_IN]->(c)\r\n" + 
+				        "WHERE s.StudentID IN " + similarCourseStudents + "\r\n" + 
+				        similarityData + 
+				        "WITH collect(userData) as data\r\n" + 
+				        "CALL algo.similarity.euclidean.stream(data, {similarityCutoff: "+ similarityCutoff  +"})\r\n" + 
+				        "YIELD item1, item2, count1, count2, similarity\r\n" + 
+				        "RETURN apoc.coll.union(collect(algo.asNode(item1).StudentID),collect(algo.asNode(item2).StudentID)) AS similarMarkStudents, " +
+				        "size(apoc.coll.union(collect(algo.asNode(item1).StudentID),collect(algo.asNode(item2).StudentID))) AS similarMarkStudentsSize");
+					    
+				while ( studentResult.hasNext() ) {
+				// get the list of similar students according to marks
+				Map<String,Object> resultTable = studentResult.next().asMap();
+				            
+			    // create a new map of similar students and corresponding count
+				for (Entry<String,Object> pair : resultTable.entrySet()) {
+					similarMark.put(pair.getKey().toString(), pair.getValue().toString());
+				    }
+				}
+						
+				similarMarkStudents = similarMark.get("similarMarkStudents");
+				similarMarkStudentsSize = similarMark.get("similarMarkStudentsSize");
+				
+				System.out.println("+------------------------------------------------------------------------------------------------------+");
+				System.out.println("| Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + similarMarkStudentsSize + " pairs of students achieved similar marks");
+			}catch (Exception e) {
+				System.out.println("Error finding similar mark students");
+				return null;
 			}
-					
-			similarMarkStudents = similarMark.get("similarMarkStudents");
-			similarMarkStudentsSize = similarMark.get("similarMarkStudentsSize");
-			
-			System.out.println("+------------------------------------------------------------------------------------------------------+");
-			System.out.println("| Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + similarMarkStudentsSize + " pairs of students achieved similar marks");
-					
+		}else {
+			similarMarkStudents = similarCourseStudents;
+		}
+		try {
 			// Using students from above, find the students with average marks in similar range to student's input mark
 			StatementResult filteredMarkResult = session.run(
 				"MATCH (s:Student)-[r:ENROLLED_IN]->(c"+ similarNode +")\r\n" + 
@@ -439,27 +459,28 @@ public class Neo4jDatabase implements Database {
 			    "WITH filtered, extract(f in filtered | f[0]) as s\r\n" + 
 			    "UNWIND(s) as students\r\n" + 
 				"RETURN collect(students) as filteredMarkStudents, size(collect(students)) as filteredMarkStudentsSize");
-				
+					
 			while ( filteredMarkResult.hasNext() ) {
 			// get the list of similar students filtered according to student imput marks
 		    Map<String,Object> resultTable = filteredMarkResult.next().asMap();
-			        
+				        
 		    // create a new map of similar students and corresponding count
-		    for (Entry<String,Object> pair : resultTable.entrySet()) {
-		    	filteredMark.put(pair.getKey().toString(), pair.getValue().toString());
-		    	}
+			for (Entry<String,Object> pair : resultTable.entrySet()) {
+				filteredMark.put(pair.getKey().toString(), pair.getValue().toString());
+			   	}
 			}
-					
+						
 			filteredMarkStudents = filteredMark.get("filteredMarkStudents");
 			filteredMarkStudentsSize = filteredMark.get("filteredMarkStudentsSize");
-				
-			System.out.println("| Of " + similarMarkStudentsSize + " students with similar marks, " + filteredMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +")");
+					
+			System.out.println("| " + filteredMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +")");
 			System.out.println("+------------------------------------------------------------------------------------------------------+\r\n");
 			return filteredMarkStudents;
 		}catch (Exception e) {
+			e.printStackTrace();
 			System.out.println("Error finding similar mark students");
 			return null;
-		}
+		}	
 	}
 	
 	//retrieve GPA of similar students

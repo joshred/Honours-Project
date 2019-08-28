@@ -13,6 +13,10 @@ public class MySQLDatabase implements Database {
 	Statement st;
 	
 	//Variables passed to queries
+	String major1;
+	String major2;
+	String curriculum;
+	
 	String nextYear;
 	static String currentYear;
 	static int averageMark;
@@ -23,7 +27,6 @@ public class MySQLDatabase implements Database {
 	static String predictedMark;
 	
 	//Variables for similarity queries/ output
-	static String curriculum;
 	static String minSimilarCourses;
 	static String similarCourseStudents;
 	static String similarCourseStudentsSize;
@@ -77,10 +80,13 @@ public class MySQLDatabase implements Database {
 	/**
 	 * Create a new connection to a MySQL database and set parameters for the corresponding queries
 	 * @param nextYear The year the student is about to start, this affects the algorithms & nodes queried
+	 * @param curriculum2 
+	 * @param major2 
+	 * @param major1 
 	 * @param inputMarks The user input marks which affect the LB and UB parameters of queries
 	 * @throws SQLException
 	 */
-	public MySQLDatabase(String nextYear, int[] inputMarks) throws SQLException {
+	public MySQLDatabase(String nextYear, String major1, String major2, String curriculum, int[] inputMarks) throws SQLException {
 		//access the db
 		try {
 			String myDriver = "com.mysql.cj.jdbc.Driver";
@@ -94,6 +100,7 @@ public class MySQLDatabase implements Database {
 		}
 		
 		//calculate average grade, LB, UB
+		this.curriculum = curriculum;
 		this.nextYear = nextYear;
 		averageMark = average(inputMarks);
 		LB = Integer.toString(averageMark - 5);
@@ -140,7 +147,7 @@ public class MySQLDatabase implements Database {
 	
 	//retrieve course counts using input curriculum
 	@Override
-	public String getCourseCounts(String curriculum) {
+	public String getCourseCounts() {
 		//define the queries
 		String s1y1query = "select count(CourseID) as s1y1 from courses where courseName in ("+ curriculum +") and (Semester = 0 or Semester = 1) and courses.Year = 1 ;";
 		String s2y1query = "select count(CourseID) as s2y1 from courses where courseName in ("+ curriculum +") and (Semester = 0 or Semester = 2) and courses.Year = 1 ;";
@@ -304,7 +311,7 @@ public class MySQLDatabase implements Database {
 	
 	//return true if any courses are missing from the curriculum
 	@Override
-	public boolean getMissingCourses(String curriculum) {
+	public boolean getMissingCourses() {
 		//define the queries
 		String missingMustCoursesquery = "select c.CourseName as missingMustCourses \r\n" + 
 				"from courses c \r\n" + 
@@ -444,7 +451,7 @@ public class MySQLDatabase implements Database {
 	
 	//retrieve list of students who have the same courses
 	@Override
-	public String getSimilarCourseStudents(String curriculum, String minSimilarCourses) {
+	public String getSimilarCourseStudents(String minSimilarCourses) {
 		//define query to find students with 50% of the same courses
 		String similarCourseQuery = 
 				"select StudentID  from coursemarks cm \r\n" + 
