@@ -417,8 +417,7 @@ public class Neo4jDatabase implements Database {
 		if(year.equals("1")) {
 			try {
 				StatementResult studentResult = session.run(
-				    	"MATCH (s:Student), (c"+ similarNode +")\r\n" + 
-				        "OPTIONAL MATCH (s)-[r:ENROLLED_IN]->(c)\r\n" + 
+				        "MATCH (s:Student)-[r:ENROLLED_IN]->(c"+ similarNode +")\r\n" + 
 				        "WHERE s.StudentID IN " + similarCourseStudents + "\r\n" + 
 				        similarityData + 
 				        "WITH collect(userData) as data\r\n" + 
@@ -489,7 +488,7 @@ public class Neo4jDatabase implements Database {
 			StatementResult GPAResult = session.run(
 			    "MATCH (s:Student)-[r:ENROLLED_IN]->(c"+ performanceNode +")\r\n" + 
 			    "WHERE s.StudentID IN "+ filteredMarkStudents +"\r\n" + 
-				"RETURN toInteger(avg(r.Mark)) as GPA, toInteger(stDev(r.Mark)) as standardDeviation");
+				 "RETURN toInteger(avg(r.Mark)) as GPA, toInteger(stDev(r.Mark)) as standardDeviation");
 				
 			while ( GPAResult.hasNext() ) {
 			// get the GPA of similar students
