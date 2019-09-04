@@ -2,6 +2,9 @@ package DataGenerator;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Set;
+import java.util.Collections;
+import java.util.HashSet;
 
 public class test {
 	
@@ -23,6 +26,28 @@ public class test {
 		return godelNum;
 		
 	}
+	
+	public static String reverse(String in) {
+		String[] words = in.split(" ");
+		String out = "";
+		for (int i = words.length - 1; i > 0; i --) {
+			out += words[i] + " ";
+		}
+		return out;
+	}
+	
+	public String remove(String in){
+	      Set<String> letters = new HashSet<String>();
+	      String out = "";
+	      for(int i = 0; i < in.length(); i ++){
+	         if(!letters.contains(String.valueOf(in.charAt(i)))){
+	        	 letters.add(String.valueOf(in.charAt(i)));
+	        	 out += String.valueOf(in.charAt(i));
+	         }
+	      }
+	      return out;
+	   }
+
 
 	public static void main(String[] args) {
 		CourseListBuilder.getCourses();

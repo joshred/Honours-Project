@@ -353,10 +353,10 @@ public class MySQLDatabase implements Database {
 		
 		//check that compulsory courses are taken and at least some optional courses z
 	    if (!missingMustCourses.isEmpty()) {
-	    	System.out.println("Missing the following course(s): "+ missingMustCourses.toString());
+	    	Utils.print(new String [] {"Missing the following course(s): "+ missingMustCourses.toString()});
 	    	return true;
 	    }if (combinationsEnrolledIn.isEmpty()) {
-	    	System.out.println("You must enroll in one or more of the following course(s): "+ coursesNotEnrolledIn.toString());
+	    	Utils.print(new String [] {"You must enroll in one or more of the following course(s): "+ coursesNotEnrolledIn.toString()});
 	    	return true;
 	    }
 	    
@@ -369,7 +369,7 @@ public class MySQLDatabase implements Database {
 	    	String notEnrolledIn = (String) takenCombinations.toArray()[0];
 	    	int indexOfCourse = combinationsNotEnrolledIn.indexOf(notEnrolledIn);
 	    	String missingCourseCombination = coursesNotEnrolledIn.get(indexOfCourse);
-	    	System.out.println("Missing the other course component: "+ missingCourseCombination);
+	    	Utils.print(new String [] {"Missing the other course component: "+ missingCourseCombination});
 	    	return true;
 	    }
 	    return false;
@@ -378,74 +378,74 @@ public class MySQLDatabase implements Database {
 	//return true if the counts pass all if-statements
 	@Override
 	public boolean checkCounts(String counts) {
-    	System.out.println("+------------------------------------+");
+		ArrayList<String> descriptions = new ArrayList<String>();
     	if (fullCourses < 9) {
-    		System.out.println("| Too few Full Courses");
+    		descriptions.add("Too few Full Courses");
     		return false;
     	}else {
-    		System.out.println("| Enough Full Courses");
+    		descriptions.add("Enough Full Courses");
     	}
     	if (sciFullCourses < 6) {
-    		System.out.println("| Too few Science Full Courses");
+    		descriptions.add("Too few Science Full Courses");
     		return false;
     	}else {
-    		System.out.println("| Enough Science Full Courses");
+    		descriptions.add("Enough Science Full Courses");
     	}
     	if (seniorFullCourses < 4) {
-    		System.out.println("| Too few Senior Full Courses");
+    		descriptions.add("Too few Senior Full Courses");
     		return false;
     	}else {
-    		System.out.println("| Enough Senior Full Courses");
+    		descriptions.add("Enough Senior Full Courses");
     	}
     	if (seniorSciFullCourses < 3) {
-    		System.out.println("| Too few Senior Science Full Courses");
+    		descriptions.add("Too few Senior Science Full Courses");
     		return false;
     	}else {
-    		System.out.println("| Enough Senior Science Full Courses");
+    		descriptions.add("Enough Senior Science Full Courses");
     	}
     	if (thirdFullCourses < 2) {
-    		System.out.println("| Too few Third Year Full Courses");
+    		descriptions.add("Too few Third Year Full Courses");
     		return false;
     	}else {
-    		System.out.println("| Enough Third Year Full Courses");
+    		descriptions.add("Enough Third Year Full Courses");
     	}
     	if (s1y1 > 4 || s2y1 > 4) {
     		if (s1y1NQF > 72 || s2y1NQF > 72) {
-    			System.out.println("| Too many First Year Half Courses");
+    			descriptions.add("Too many First Year Half Courses");
     			return false;
     		}
-    		System.out.println("| Enough First Year Half Courses");
+    		descriptions.add("Enough First Year Half Courses");
     	}else {
-    		System.out.println("| Enough First Year Half Courses");
+    		descriptions.add("Enough First Year Half Courses");
     	}
     	if (s1y2 > 3 || s2y2 > 3 || s1y3 > 3 || s2y3 > 3) {
     		if (s1y2NQF > 72 || s2y2NQF > 72 || s1y3NQF > 72 || s2y3NQF > 72) {
-    			System.out.println("| Too many Senior Year Half Courses");
+    			descriptions.add("Too many Senior Year Half Courses");
     			return false;
     		}
-    		System.out.println("| Enough Senior Year Half Courses");
+    		descriptions.add("Enough Senior Year Half Courses");
     	}else {
-    		System.out.println("| Enough Senior Year Half Courses");
+    		descriptions.add("Enough Senior Year Half Courses");
     	}
     	if (totalNQF < 420) {
-    		System.out.println("| Too few NQF credits");
+    		descriptions.add("Too few NQF credits");
     		return false;
     	}else {
-    		System.out.println("| Enough NQF Credits");
+    		descriptions.add("Enough NQF Credits");
     	}
     	if (sciNQF < 276) {
-    		System.out.println("| Too few Science NQF credits");
+    		descriptions.add("Too few Science NQF credits");
     		return false;
     	}else {
-    		System.out.println("| Enough Science NQF Credits");
+    		descriptions.add("Enough Science NQF Credits");
     	}
     	if (thirdNQF < 120) {
-    		System.out.println("| Too few Third Year NQF credits");
+    		descriptions.add("Too few Third Year NQF credits");
     		return false;
     	}else {
-    		System.out.println("| Enough Third Year NQF Credits");
+    		descriptions.add("Enough Third Year NQF Credits");
     	}
-    	System.out.println("+------------------------------------+\r\n");
+    	Utils.print(descriptions.toArray(new String[0]));
     	return true;
 	}
 	
@@ -475,9 +475,7 @@ public class MySQLDatabase implements Database {
 		    similarCourseStudents = temp.substring(0, temp.length() -1);
 		    similarCourseStudentsSize = Integer.toString(count);
 
-		    System.out.println("+----------------------------------------------------------------------------+");
-			System.out.println("| Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum. |");
-			System.out.println("+----------------------------------------------------------------------------+\r\n");
+		    Utils.print(new String [] {"Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum."});
 			return similarCourseStudents;
 		}catch (Exception e) {
 			System.out.println("Error finding SQL similar course students.");
@@ -524,9 +522,7 @@ public class MySQLDatabase implements Database {
 		    similarMarkStudents = temp.substring(0, temp.length() -1);
 		    similarMarkStudentsSize = Integer.toString(count);
 		    
-		    System.out.println("+------------------------------------------------------------------------------------------------------------+");
-			System.out.println("| Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + similarMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +").");
-			System.out.println("+------------------------------------------------------------------------------------------------------------+\r\n");
+		    Utils.print(new String [] {"Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + similarMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +")."});
 			return similarMarkStudents;
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -554,10 +550,8 @@ public class MySQLDatabase implements Database {
 		    	standardDeviation = predictedMarkResult.getString("standardDeviation").substring(0, 2);
 		    }
 			
-		    System.out.println("+--------------------------------------------------------------------------------------------------------------------------------------+");
-		    System.out.println("| The average "+ predictedMark +" of " + similarMarkStudentsSize + " students with a "+ inputMark +" and curriculum similar to you is " + GPA + " with a standard deviation of " + standardDeviation);
-			System.out.println("+--------------------------------------------------------------------------------------------------------------------------------------+");
-			}catch (Exception e) {
+		    Utils.print(new String [] {"The average "+ predictedMark +" of " + similarMarkStudentsSize + " students with a "+ inputMark +" and curriculum similar to you is " + GPA + " with a standard deviation of " + standardDeviation });
+		}catch (Exception e) {
 			System.out.println("Error predicting SQL grade.");
 		}
 	}

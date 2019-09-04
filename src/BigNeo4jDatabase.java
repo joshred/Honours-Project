@@ -49,9 +49,7 @@ public class BigNeo4jDatabase extends Neo4jDatabase {
 			studentRoots = roots.get("roots");
 			rootsSize = roots.get("rootsSize");
 			
-			System.out.println("+------------------------------------------------------------------+");
-			System.out.println("| Found " + rootsSize + " student clusters who enrolled in your majors. |");
-			System.out.println("+------------------------------------------------------------------+\r\n");
+			Utils.print(new String [] {"Found " + rootsSize + " student clusters who enrolled in your majors."});
 		}catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Error retreving major roots.");
@@ -84,14 +82,10 @@ public class BigNeo4jDatabase extends Neo4jDatabase {
 				similarity = rootsSimilarity.get("similarity");
 				intersection = rootsSimilarity.get("intersection");
 				
-				System.out.println("+----------------------------------------------------------------------------+");
-				System.out.println("| The cluster with the greatest similarity ("+ similarity +") shares "+ intersection +" courses with your curriculum. |");
-				System.out.println("+----------------------------------------------------------------------------+\r\n");
-			//return studentRoots;
+				Utils.print(new String [] {"The cluster with the greatest similarity ("+ similarity +") shares "+ intersection +" courses with your curriculum."});
 			}catch (Exception e) {
 				e.printStackTrace();
 				System.out.println("Error retreving root similarity.");
-				//return null;
 			}
 		}
 	}
@@ -119,9 +113,7 @@ public class BigNeo4jDatabase extends Neo4jDatabase {
 			similarCourseStudents = similarCourse.get("similarCourseStudents");
 			similarCourseStudentsSize = similarCourse.get("similarCourseStudentsSize");
 			
-			System.out.println("+----------------------------------------------------------------------------+");
-			System.out.println("| Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum. |");
-			System.out.println("+----------------------------------------------------------------------------+\r\n");
+			Utils.print(new String [] {"Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum."});
 			return similarCourseStudents;
 		}catch (Exception e) {
 			System.out.println("Error finding similar course students.");

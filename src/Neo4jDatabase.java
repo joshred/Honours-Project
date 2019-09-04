@@ -305,14 +305,10 @@ public class Neo4jDatabase implements Database {
 
 		    // Check if missing any courses
 		    if (!missingMustCourses.get("missingMustCourses").isEmpty()) {
-		    	System.out.println("+---------------------------------------------------------+");
-		    	System.out.println("| Missing the following course(s): "+ missingMustCourses.get("missingMustCourses"));
-		    	System.out.println("+---------------------------------------------------------+\r\n");
+		    	Utils.print(new String [] {"Missing the following course(s): "+ missingMustCourses.get("missingMustCourses")});
 		    	return true;
 		    }if (takenOptionalCourses.get("combinationsEnrolledIn").isEmpty()) {
-		    	System.out.println("+---------------------------------------------------------+");
-		    	System.out.println("| You must enroll in one or more of the following course(s): "+ missingOptionalCourses.get("coursesNotEnrolledIn"));
-		    	System.out.println("+---------------------------------------------------------+\r\n");
+		    	Utils.print(new String [] {"You must enroll in one or more of the following course(s): "+ missingOptionalCourses.get("coursesNotEnrolledIn")});
 		    	return true;
 		    }
 		    
@@ -325,9 +321,7 @@ public class Neo4jDatabase implements Database {
 		    	String notEnrolledIn = (String) takenCombinations.toArray()[0];
 		    	int indexOfCourse = missingOptionalCourses.get("combinationsNotEnrolledIn").indexOf(notEnrolledIn);
 		    	String missingCourseCombination = missingOptionalCourses.get("coursesNotEnrolledIn").get(indexOfCourse);
-		    	System.out.println("+---------------------------------------------------------+");
-		    	System.out.println("| Missing the other course component: "+ missingCourseCombination);
-		    	System.out.println("+---------------------------------------------------------+\r\n");
+		    	Utils.print(new String [] {"Missing the other course component: "+ missingCourseCombination});
 		    	return true;
 		    }
 		    
@@ -362,11 +356,7 @@ public class Neo4jDatabase implements Database {
 		    }
 	    
 	    // Output the decisions made along the constraint path
-		System.out.println("+----------------------------------+");
-	    for (String description : constraintTreeResult.get("extractedDescriptions")) {
-	    	System.out.println("| " + description);
-	    }
-	    System.out.println("+----------------------------------+\r\n");
+		Utils.print(constraintTreeResult.get("extractedDescriptions").toArray(new String[0]));
 	    
 	    if(constraintTreeResult.get("Terminal").toString().equals("[DoesNotMeetRequirements]")) {
 	    	return false;
@@ -402,9 +392,7 @@ public class Neo4jDatabase implements Database {
 			similarCourseStudents = similarCourse.get("similarCourseStudents");
 			similarCourseStudentsSize = similarCourse.get("similarCourseStudentsSize");
 			
-			System.out.println("+----------------------------------------------------------------------------+");
-			System.out.println("| Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum. |");
-			System.out.println("+----------------------------------------------------------------------------+\r\n");
+			Utils.print(new String [] {"Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum."});
 			return similarCourseStudents;
 		}catch (Exception e) {
 			System.out.println("Error finding similar course students.");
@@ -439,8 +427,6 @@ public class Neo4jDatabase implements Database {
 				similarMarkStudents = similarMark.get("similarMarkStudents");
 				similarMarkStudentsSize = similarMark.get("similarMarkStudentsSize");
 				
-				System.out.println("+------------------------------------------------------------------------------------------------------+");
-				System.out.println("| Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + similarMarkStudentsSize + " pairs of students achieved similar marks");
 			}catch (Exception e) {
 				System.out.println("Error finding similar mark students");
 				return null;
@@ -471,9 +457,8 @@ public class Neo4jDatabase implements Database {
 						
 			filteredMarkStudents = filteredMark.get("filteredMarkStudents");
 			filteredMarkStudentsSize = filteredMark.get("filteredMarkStudentsSize");
-					
-			System.out.println("| " + filteredMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +")");
-			System.out.println("+------------------------------------------------------------------------------------------------------+\r\n");
+			
+			Utils.print(new String [] {"Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + filteredMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +")"});
 			return filteredMarkStudents;
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -502,10 +487,7 @@ public class Neo4jDatabase implements Database {
 			String GPA = predictedPerformance.get("GPA");
 			String standardDeviation = predictedPerformance.get("standardDeviation");
 			
-			System.out.println("+--------------------------------------------------------------------------------------------------------------------------------------+");
-			System.out.println("| The average "+ predictedMark +" of " + filteredMarkStudentsSize + " students with a "+ inputMark +" and curriculum similar to you is " + GPA + " with a standard deviation of " + standardDeviation +".");
-			System.out.println("+--------------------------------------------------------------------------------------------------------------------------------------+");
-
+			Utils.print(new String [] {"The average "+ predictedMark +" of " + filteredMarkStudentsSize + " students with a "+ inputMark +" and curriculum similar to you is " + GPA + " with a standard deviation of " + standardDeviation +"."});
 		}catch (Exception e) {
 			System.out.println("Error predicting grade.");
 		}

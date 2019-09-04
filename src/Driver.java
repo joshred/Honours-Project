@@ -1,5 +1,5 @@
 import java.sql.SQLException;
-import java.util.ArrayList;
+
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -32,27 +32,7 @@ public class Driver {
 	static String similarMarkStudents;
 	static String similarStudents;
 	
-	/** 
-	 * Formats an input curriculum correctly for insertion into queries
-	 * @param c the input curriculum array of form a, b, c
-	 * @return the formatted curriculum for insertion into queries of the form \"a\", \"b\", \"c\"
-	 */
-	public static String formatCurriculum(String[] c) {
-		String temp = "\"" +  Arrays.toString(c).replace("[", "").replace("]", "") + "\"";
-		return temp.replace(",", "\",\"").replace(" ", "");
-	}
 	
-	/**
-	 * Calculates (size of curriculum)/2 for the 50% cutoff
-	 * @param crs the String user input of planned courses
-	 * @return 50% of the length of the courses
-	 */
-	public static String similarCourseCutoff (String crs) {
-		String[] courses = crs.split(" ");
-		ArrayList<String> lst = new ArrayList<String>(Arrays.asList(courses));
-		int length = (int) lst.size()/2;
-		return Integer.toString(length);
-	}
 	
 	public static void checkConstraints() {
 		//Check Course Counts
@@ -65,9 +45,7 @@ public class Driver {
 		
 		//if there are no missing courses, get and check course counts
 		if(!missingCourses) {
-			System.out.println("+------------------------------------------------------------+");
-			System.out.println("| Curriculum meets all the course requirements of the Major. |");
-			System.out.println("+------------------------------------------------------------+\r\n");
+			Utils.print(new String [] {"Curriculum meets all the course requirements of the Major."});
 			System.out.println("Retrieving course counts...\r\n");
 			
 			String counts = db.getCourseCounts();
@@ -77,13 +55,9 @@ public class Driver {
 				
 		//if course and count requirements met, find similar students and predict grade
 		if(passedRequirements) {
-			System.out.println("+--------------------------+");
-			System.out.println("| Meets Count Requirements |");
-			System.out.println("+--------------------------+\r\n");
+			Utils.print(new String [] {"Meets Count Requirements."});
 		}else {
-			System.out.println("+-----------------------------------+");
-	    	System.out.println("| Does Not Meet Count Requirements. |");
-	    	System.out.println("+-----------------------------------+\r\n");
+			Utils.print(new String [] {"Does Not Meet Count Requirements."});
 		}
 	}	
 
@@ -91,7 +65,7 @@ public class Driver {
 		System.out.println("Finding similar students for grade prediction...\r\n");
     	
     	//get similar course students
-		similarCourseStudents = db.getSimilarCourseStudents(similarCourseCutoff(Arrays.toString(inputCurriculum)));
+		similarCourseStudents = db.getSimilarCourseStudents(Utils.similarCourseCutoff(Arrays.toString(inputCurriculum)));
 		
 		//get similar mark students
 		if(similarCourseStudents != null) {
@@ -167,7 +141,7 @@ public class Driver {
 				inputCurriculum = s.nextLine().replace(" ", "").split(",");
 				
 				try {
-					curriculum = formatCurriculum(inputCurriculum); //convert the format of the curriculum
+					curriculum = Utils.formatCurriculum(inputCurriculum); //convert the format of the curriculum
 				}catch (Exception e) {
 			        System.out.print("Invalid curriculum input. Please reenter.");
 			        inputCurriculum = null;
@@ -185,10 +159,10 @@ public class Driver {
 					System.out.println("**The Small db uses real data and Large uses simulated data**");
 					System.out.print(">");
 					databaseType = databaseType + s.nextLine();
-				}
-				if(!databaseType.startsWith("Neo4jS") && !databaseType.startsWith("Neo4js") && !databaseType.startsWith("Neo4jL") && !databaseType.startsWith("Neo4jl")) {
-					System.out.print("Invalid Neo4j database choice. Please reenter.");	
-					databaseType = null;
+					if(!databaseType.startsWith("Neo4jS") && !databaseType.startsWith("Neo4js") && !databaseType.startsWith("Neo4jL") && !databaseType.startsWith("Neo4jl")) {
+						System.out.print("Invalid Neo4j database choice. Please reenter.");	
+						databaseType = null;
+					}
 				}
 			}
 			if (nextYear != null && inputMarks != null && inputMajor != null && inputCurriculum != null && databaseType != null && choice == null) {
