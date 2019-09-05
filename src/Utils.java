@@ -13,6 +13,11 @@ public class Utils {
 		return temp.replace(",", "\",\"").replace(" ", "");
 	}
 	
+	public static String formatCurriculum(ArrayList<String> c) {
+		String temp = "\"" +  c.toString().replace("[", "").replace("]", "") + "\"";
+		return temp.replace(",", "\",\"").replace(" ", "");
+	}
+	
 	/**
 	 * Calculates (size of curriculum)/2 for the 50% cutoff
 	 * @param crs the String user input of planned courses
@@ -25,6 +30,12 @@ public class Utils {
 		return Integer.toString(length);
 	}
 	
+	/**
+	 * Generates a string of a repeated character for a desired length 
+	 * @param ch the character to be repeated
+	 * @param len the number of times the character is to be repeated
+	 * @return a string of a character repeated len times
+	 */
 	private static String fill(char ch, int len) {
 	    StringBuilder sb = new StringBuilder(len);
 	    for (int i = 0; i < len; i++) {
@@ -33,6 +44,13 @@ public class Utils {
 	    return sb.toString();
 	}
 	
+	/**
+	 * Prints the contents of a String array contained in a neat box e.g.
+	 * +------+
+	 * | Text.|
+	 * +------+
+	 * @param in the array to print in a box
+	 */
 	public static void print(String[] in) {
 		int maxLength = 0;
 		for(String s: in) {

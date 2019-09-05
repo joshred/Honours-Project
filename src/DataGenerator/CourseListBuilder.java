@@ -22,6 +22,8 @@ public class CourseListBuilder {
 	static ArrayList<String> LAWmajors = new ArrayList<String>();
 	static ArrayList<String> MEDmajors = new ArrayList<String>();
 	static ArrayList<String> SCImajors = new ArrayList<String>();
+	public static ArrayList<String> ALLmajors = new ArrayList<String>();
+
 	
 	static HashMap<String, ArrayList<String>> COMcourses = new HashMap<String, ArrayList<String>>();
 	static HashMap<String, ArrayList<String>> EBEcourses = new HashMap<String, ArrayList<String>>();
@@ -107,9 +109,12 @@ public class CourseListBuilder {
                 }
 
             }
-//            for (Entry<String, Integer> pair : COMcourseIDs.entrySet()) {
-//            	System.out.println(pair.getKey() + " "+ pair.getValue().toString());
-//        	}
+            ALLmajors.addAll(COMmajors);
+            ALLmajors.addAll(EBEmajors);
+            ALLmajors.addAll(HUMmajors);
+            ALLmajors.addAll(LAWmajors);
+            ALLmajors.addAll(MEDmajors);
+            ALLmajors.addAll(SCImajors);
             System.out.println("Done");
 
         } catch (IOException e) {
