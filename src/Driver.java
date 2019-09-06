@@ -31,6 +31,10 @@ public class Driver {
 	static String similarCourseStudents;
 	static String similarMarkStudents;
 	static String similarStudents;
+	
+	public String getReport() {
+		return db.getReport();
+	}
 
 	/**
 	 * Get user input in while loop to ensure correct format
@@ -180,6 +184,9 @@ public class Driver {
 
 		// determine if any core/ alternate courses are missing
 		missingCourses = db.getMissingCourses();
+		
+		//check CSC courses tekn in correct order
+		db.checkPrerequisites(curriculum);
 
 		// if there are no missing courses, get and check course counts
 		if (!missingCourses) {
@@ -222,8 +229,8 @@ public class Driver {
 		}
 	}
 		
-	public Driver(String[] inputCurriculum, String major1, String major2, String nextYear, int[] inputMarks, String databaseType, String choice) {
-		Driver.inputCurriculum = inputCurriculum; 
+	public Driver(String curriculum, String major1, String major2, String nextYear, int[] inputMarks, String databaseType, String choice) {
+		Driver.curriculum = curriculum; 
 		Driver.major1 = major1;
 		Driver.major2 = major2;
 		Driver.nextYear = nextYear;

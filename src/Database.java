@@ -2,6 +2,8 @@ import java.sql.SQLException;
 
 public interface Database {
 	
+	public void checkPrerequisites(String courses);
+	
 	/**
 	 * Retrieve a list/ dictionary of counts of specific types of courses e.g. number of full courses
 	 * @param curriculum The list of courses the counts are queried from
@@ -43,6 +45,12 @@ public interface Database {
 	 * @param similarMarkStudents The list of students used to find average GPA 
 	 */
 	public void predictGrade(String similarMarkStudents);
+	
+	/**
+	 * Get the "report" i.e. any feedback from constraint checks & grade prediction
+	 * @return
+	 */
+	public String getReport();
 	
 	/**
 	 * Close any connections to any database

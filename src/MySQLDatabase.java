@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 public class MySQLDatabase implements Database {
@@ -76,6 +77,9 @@ public class MySQLDatabase implements Database {
 	static ArrayList<String> coursesEnrolledIn = new ArrayList<String>();
 	static ArrayList<String> combinationsEnrolledIn = new ArrayList<String>();
 	
+	//String to store output
+	static String report;
+	
 	
 	/**
 	 * Create a new connection to a MySQL database and set parameters for the corresponding queries
@@ -98,6 +102,8 @@ public class MySQLDatabase implements Database {
 			e.printStackTrace();
 			System.out.println("Error connecting to SQL database.");
 		}
+		
+		report = "";
 		
 		//calculate average grade, LB, UB
 		this.curriculum = curriculum;
@@ -143,6 +149,27 @@ public class MySQLDatabase implements Database {
 			sum = sum + m;
 		}
 		return sum/list.length;
+	}
+	
+	public void checkPrerequisites(String courses) {
+		
+		ArrayList<String> userCourses = new ArrayList<String> (Arrays.asList(courses.replace("\"", "").replace(" ", "").split(",")));
+		ArrayList<String> cscCourses = new ArrayList<String>();
+		for (int i = 0; i < userCourses.size(); i ++) {
+			if(userCourses.get(i).startsWith("CSC")) {
+				cscCourses.add(userCourses.get(i));
+			}
+		}
+		System.out.println(cscCourses);
+		//System.out.println(userCourses);
+		String[] prereqArray = {"CSC1015F", "CSC1016S", "CSC2001F", "CSC2002S", "CSC2003S", "CSC3002F", "CSC3003S"};
+		ArrayList<String> prereq = new ArrayList<String>( Arrays.asList(prereqArray));
+		if (!prereq.equals(cscCourses)){
+			report += ( "Pre-requisitie courses taken out of order.\r\n");
+			Utils.print(new String[] {"Pre-requisitie courses taken out of order."});
+		}else {
+			//System.out.println("Fine");
+		}
 	}
 	
 	//retrieve course counts using input curriculum
@@ -312,6 +339,7 @@ public class MySQLDatabase implements Database {
 	//return true if any courses are missing from the curriculum
 	@Override
 	public boolean getMissingCourses() {
+		report += "** Degree Requirements **\r\n";
 		//define the queries
 		String missingMustCoursesquery = "select c.CourseName as missingMustCourses \r\n" + 
 				"from courses c \r\n" + 
@@ -353,9 +381,11 @@ public class MySQLDatabase implements Database {
 		
 		//check that compulsory courses are taken and at least some optional courses z
 	    if (!missingMustCourses.isEmpty()) {
+	    	report += "Missing the following course(s): "+ missingMustCourses.toString() + "\r\n";
 	    	Utils.print(new String [] {"Missing the following course(s): "+ missingMustCourses.toString()});
 	    	return true;
 	    }if (combinationsEnrolledIn.isEmpty()) {
+	    	report += "You must enroll in one or more of the following course(s): "+ coursesNotEnrolledIn.toString() + "\r\n";
 	    	Utils.print(new String [] {"You must enroll in one or more of the following course(s): "+ coursesNotEnrolledIn.toString()});
 	    	return true;
 	    }
@@ -369,6 +399,7 @@ public class MySQLDatabase implements Database {
 	    	String notEnrolledIn = (String) takenCombinations.toArray()[0];
 	    	int indexOfCourse = combinationsNotEnrolledIn.indexOf(notEnrolledIn);
 	    	String missingCourseCombination = coursesNotEnrolledIn.get(indexOfCourse);
+	    	report += "Missing the other course component: "+ missingCourseCombination + "\r\n";
 	    	Utils.print(new String [] {"Missing the other course component: "+ missingCourseCombination});
 	    	return true;
 	    }
@@ -445,6 +476,9 @@ public class MySQLDatabase implements Database {
     	}else {
     		descriptions.add("Enough Third Year NQF Credits");
     	}
+    	for(String d : descriptions) {
+    		report += d + "\r\n";
+    	}
     	Utils.print(descriptions.toArray(new String[0]));
     	return true;
 	}
@@ -452,6 +486,7 @@ public class MySQLDatabase implements Database {
 	//retrieve list of students who have the same courses
 	@Override
 	public String getSimilarCourseStudents(String minSimilarCourses) {
+		report += "** Performance Prediction **\r\n";
 		//define query to find students with 50% of the same courses
 		String similarCourseQuery = 
 				"select StudentID  from coursemarks cm \r\n" + 
@@ -474,7 +509,7 @@ public class MySQLDatabase implements Database {
 		    
 		    similarCourseStudents = temp.substring(0, temp.length() -1);
 		    similarCourseStudentsSize = Integer.toString(count);
-
+		    report += "Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum.\r\n";
 		    Utils.print(new String [] {"Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum."});
 			return similarCourseStudents;
 		}catch (Exception e) {
@@ -521,7 +556,7 @@ public class MySQLDatabase implements Database {
 
 		    similarMarkStudents = temp.substring(0, temp.length() -1);
 		    similarMarkStudentsSize = Integer.toString(count);
-		    
+		    report += "Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + similarMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +").\r\n";
 		    Utils.print(new String [] {"Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + similarMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +")."});
 			return similarMarkStudents;
 		}catch (Exception e) {
@@ -549,7 +584,7 @@ public class MySQLDatabase implements Database {
 		    	GPA = predictedMarkResult.getString("GPA").substring(0, 2);
 		    	standardDeviation = predictedMarkResult.getString("standardDeviation").substring(0, 2);
 		    }
-			
+		    report += "The average "+ predictedMark +" of " + similarMarkStudentsSize + " students with a "+ inputMark +" and curriculum similar to you is " + GPA + " with a standard deviation of " + standardDeviation + "\r\n";
 		    Utils.print(new String [] {"The average "+ predictedMark +" of " + similarMarkStudentsSize + " students with a "+ inputMark +" and curriculum similar to you is " + GPA + " with a standard deviation of " + standardDeviation });
 		}catch (Exception e) {
 			System.out.println("Error predicting SQL grade.");
@@ -560,6 +595,11 @@ public class MySQLDatabase implements Database {
 	@Override
 	public void close() throws SQLException {
 		st.close();
+	}
+
+	@Override
+	public String getReport() {
+		return report;
 	}
 
 }

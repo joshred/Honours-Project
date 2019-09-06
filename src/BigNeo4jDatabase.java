@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -24,6 +26,9 @@ public class BigNeo4jDatabase extends Neo4jDatabase {
 	public boolean getMissingCourses() {
 		return super.getMissingCourses();
 	}
+	public void checkPrerequisites(String courses) {
+		super.checkPrerequisites(courses);
+	}
 
 	@Override
 	public boolean checkCounts(String counts) {
@@ -49,6 +54,7 @@ public class BigNeo4jDatabase extends Neo4jDatabase {
 			studentRoots = roots.get("roots");
 			rootsSize = roots.get("rootsSize");
 			
+			report += "Found " + rootsSize + " student clusters who enrolled in your majors.\r\n";
 			Utils.print(new String [] {"Found " + rootsSize + " student clusters who enrolled in your majors."});
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -82,6 +88,7 @@ public class BigNeo4jDatabase extends Neo4jDatabase {
 				similarity = rootsSimilarity.get("similarity");
 				intersection = rootsSimilarity.get("intersection");
 				
+				report += "The cluster with the greatest similarity ("+ similarity +") shares "+ intersection +" courses with your curriculum.\r\n";
 				Utils.print(new String [] {"The cluster with the greatest similarity ("+ similarity +") shares "+ intersection +" courses with your curriculum."});
 			}catch (Exception e) {
 				e.printStackTrace();
@@ -113,6 +120,7 @@ public class BigNeo4jDatabase extends Neo4jDatabase {
 			similarCourseStudents = similarCourse.get("similarCourseStudents");
 			similarCourseStudentsSize = similarCourse.get("similarCourseStudentsSize");
 			
+			report += "Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum.\r\n";
 			Utils.print(new String [] {"Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum."});
 			return similarCourseStudents;
 		}catch (Exception e) {
@@ -129,6 +137,10 @@ public class BigNeo4jDatabase extends Neo4jDatabase {
 	@Override
 	public void predictGrade(String similarMarkStudents) {
 		super.predictGrade(similarMarkStudents);
+	}
+	
+	public String getReport() {
+		return super.getReport();
 	}
 
 	@Override

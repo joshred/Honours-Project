@@ -58,6 +58,9 @@ public class Neo4jDatabase implements Database {
 	static String filteredMarkStudents;
 	static String filteredMarkStudentsSize;
 	
+	//String to store output
+	static String report; 
+	
 	/**
 	 * Create a new connection to Neo4j database and set parameters for the corresponding queries
 	 * @param year The year the student is about to start, this affects the algorithms & nodes queried
@@ -70,6 +73,8 @@ public class Neo4jDatabase implements Database {
 		//Create a connection
 		driver = GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "password"));
         session = driver.session();
+        
+        report = "";
 		
         this.major1 = major1; 
         this.major2 = major2;
@@ -145,6 +150,27 @@ public class Neo4jDatabase implements Database {
 		ArrayList<String> newList = new ArrayList<String>(Arrays.asList(withoutBrackets.split(",")));
 		newList.remove(new String(""));
 		return newList;
+	}
+	
+	public void checkPrerequisites(String courses) {
+		
+		ArrayList<String> userCourses = new ArrayList<String> (Arrays.asList(courses.replace("\"", "").replace(" ", "").split(",")));
+		ArrayList<String> cscCourses = new ArrayList<String>();
+		for (int i = 0; i < userCourses.size(); i ++) {
+			if(userCourses.get(i).startsWith("CSC")) {
+				cscCourses.add(userCourses.get(i));
+			}
+		}
+		System.out.println(cscCourses);
+		//System.out.println(userCourses);
+		String[] prereqArray = {"CSC1015F", "CSC1016S", "CSC2001F", "CSC2002S", "CSC2003S", "CSC3002F", "CSC3003S"};
+		ArrayList<String> prereq = new ArrayList<String>( Arrays.asList(prereqArray));
+		if (!prereq.equals(cscCourses)){
+			report += ( "Pre-requisitie courses taken out of order.\r\n");
+			Utils.print(new String[] {"Pre-requisitie courses taken out of order."});
+		}else {
+			//System.out.println("Fine");
+		}
 	}
 
 	//retrieve course counts using input curriculum
@@ -305,9 +331,11 @@ public class Neo4jDatabase implements Database {
 
 		    // Check if missing any courses
 		    if (!missingMustCourses.get("missingMustCourses").isEmpty()) {
+		    	report += "Missing the following course(s): "+ missingMustCourses.get("missingMustCourses") +"\r\n";
 		    	Utils.print(new String [] {"Missing the following course(s): "+ missingMustCourses.get("missingMustCourses")});
 		    	return true;
 		    }if (takenOptionalCourses.get("combinationsEnrolledIn").isEmpty()) {
+		    	report += "You must enroll in one or more of the following course(s): "+ missingOptionalCourses.get("coursesNotEnrolledIn") +"\r\n";
 		    	Utils.print(new String [] {"You must enroll in one or more of the following course(s): "+ missingOptionalCourses.get("coursesNotEnrolledIn")});
 		    	return true;
 		    }
@@ -321,6 +349,7 @@ public class Neo4jDatabase implements Database {
 		    	String notEnrolledIn = (String) takenCombinations.toArray()[0];
 		    	int indexOfCourse = missingOptionalCourses.get("combinationsNotEnrolledIn").indexOf(notEnrolledIn);
 		    	String missingCourseCombination = missingOptionalCourses.get("coursesNotEnrolledIn").get(indexOfCourse);
+		    	report += "Missing the other course component: "+ missingCourseCombination +"\r\n";
 		    	Utils.print(new String [] {"Missing the other course component: "+ missingCourseCombination});
 		    	return true;
 		    }
@@ -355,8 +384,11 @@ public class Neo4jDatabase implements Database {
 	        	}
 		    }
 	    
-	    // Output the decisions made along the constraint path
-		Utils.print(constraintTreeResult.get("extractedDescriptions").toArray(new String[0]));
+		    // Output the decisions made along the constraint path
+		    for (String d : constraintTreeResult.get("extractedDescriptions")) {
+		    	report += d + "\r\n";
+		    }
+		    Utils.print(constraintTreeResult.get("extractedDescriptions").toArray(new String[0]));
 	    
 	    if(constraintTreeResult.get("Terminal").toString().equals("[DoesNotMeetRequirements]")) {
 	    	return false;
@@ -392,6 +424,7 @@ public class Neo4jDatabase implements Database {
 			similarCourseStudents = similarCourse.get("similarCourseStudents");
 			similarCourseStudentsSize = similarCourse.get("similarCourseStudentsSize");
 			
+			report += "Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum.\r\n";
 			Utils.print(new String [] {"Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum."});
 			return similarCourseStudents;
 		}catch (Exception e) {
@@ -458,6 +491,7 @@ public class Neo4jDatabase implements Database {
 			filteredMarkStudents = filteredMark.get("filteredMarkStudents");
 			filteredMarkStudentsSize = filteredMark.get("filteredMarkStudentsSize");
 			
+			report += "Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + filteredMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +")\r\n";
 			Utils.print(new String [] {"Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + filteredMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +")"});
 			return filteredMarkStudents;
 		}catch (Exception e) {
@@ -487,6 +521,7 @@ public class Neo4jDatabase implements Database {
 			String GPA = predictedPerformance.get("GPA");
 			String standardDeviation = predictedPerformance.get("standardDeviation");
 			
+			report += "The average "+ predictedMark +" of " + filteredMarkStudentsSize + " students with a "+ inputMark +" and curriculum similar to you is " + GPA + " with a standard deviation of " + standardDeviation +".\r\n";
 			Utils.print(new String [] {"The average "+ predictedMark +" of " + filteredMarkStudentsSize + " students with a "+ inputMark +" and curriculum similar to you is " + GPA + " with a standard deviation of " + standardDeviation +"."});
 		}catch (Exception e) {
 			System.out.println("Error predicting grade.");
@@ -500,5 +535,10 @@ public class Neo4jDatabase implements Database {
 		session.close();
 	    driver.close();
 		
+	}
+
+	@Override
+	public String getReport() {
+		return report;
 	}
 }

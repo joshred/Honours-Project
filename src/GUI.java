@@ -12,6 +12,9 @@ import com.jgoodies.*;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+
 import java.awt.Font;
 import javax.swing.JTextField;
 import javax.swing.JComboBox;
@@ -21,6 +24,7 @@ import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Vector;
 import java.awt.event.ActionEvent;
 import javax.swing.JCheckBox;
@@ -30,11 +34,14 @@ public class GUI {
 
 	private JFrame frame;
 	private JTextField inputMarkField;
-	private JTextField y1courses;
+	private JTextArea courses;
 	private JCheckBox constraintCheckBox;
 	private JCheckBox predictCheckBox;
+	JLabel feedback;
 	
-	static String[] inputCurriculum = null;
+	Driver driver;
+	
+	static String curriculum = null;
 	static String[] inputMajor = null;
 	static String major1, major2 = null;
 	static String nextYear = null;
@@ -45,19 +52,18 @@ public class GUI {
 	static ArrayList<String> majors;
 	static ArrayList<String> m1;
 	static ArrayList<String> m2;
-	static ArrayList<String> courses;
-	private JTextField y2courses;
-	private JTextField y3courses;
 
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
 		CourseListBuilder.getCourses();
+		Collections.sort(CourseListBuilder.ALLmajors);
 		m1 = new ArrayList<String>(CourseListBuilder.ALLmajors);
 		m2 = new ArrayList<String>(CourseListBuilder.ALLmajors);
 		m1.add(0, "Major 1");
 		m2.add(0, "Major 2");
+		//cscCourses = new String[8];
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -77,66 +83,61 @@ public class GUI {
 		initialize();
 	}
 	
-	public void getInput() {
-		//get curriculum
-		String[] y1 = y1courses.getText().split(",");
-		String[] y2 = y2courses.getText().split(",");
-		String[] y3 = y3courses.getText().split(",");
-		ArrayList<String> stringCurriculum = new ArrayList<String>();
-		stringCurriculum.addAll(Arrays.asList(y1));
-		stringCurriculum.addAll(Arrays.asList(y2));
-		stringCurriculum.addAll(Arrays.asList(y3));
-		inputCurriculum = stringCurriculum.toArray(new String[0]);
-		
-		//get major
-		if(major1.equals("Major 1") || major2.equals("Major 2")) {
-			major1 = null; major2 = null;
-		}
-		
-		//get next Year
-		if(nextYear.equals("1")) {
-			inputMarks = new int[3];
+	public boolean getInput() {
+		if(nextYear == null || major1 == null || major2 == null || courses.getText() == null
+				|| databaseType == null || choice == null) {
+				JOptionPane.showMessageDialog(null, "Some Fields Missing");
+				return false;
 		}else {
-			inputMarks = new int[1];
+			//get curriculum
+			String[] y1 = courses.getText().replace(" ", "").split(",");
+			ArrayList<String> stringCurriculum = new ArrayList<String>();
+			stringCurriculum.addAll(Arrays.asList(y1));
+	
+			curriculum = Utils.formatCurriculum(stringCurriculum);
+			//get major
+	//		if(major1 == null || major2 == null) {
+	//			major1 = null; major2 = null;
+	//		}
+	//		
+			//get next Year
+			if(nextYear.equals("1")) {
+				inputMarks = new int[3];
+			}else {
+				inputMarks = new int[1];
+			}
+			
+			//get marks
+			String[] stringMarks = inputMarkField.getText().split(",");
+			System.out.println(Arrays.toString(stringMarks));
+			for(int i = 0 ; i <stringMarks.length; i++) {
+				inputMarks[i] = Integer.parseInt(stringMarks[i]);
+			}
+			
+			//get db type
+			
+			//get choice
+			if(constraintCheckBox.isSelected()) {
+				choice = "1";
+			}
+			if(predictCheckBox.isSelected()) {
+				choice = "2";
+			}
+			if(constraintCheckBox.isSelected() && predictCheckBox.isSelected()) {
+				choice = "3";
+			}
+			
+			driver = new Driver(curriculum, major1, major2, nextYear, inputMarks, databaseType, choice);
+			return true;
 		}
-		
-		//get marks
-		String[] stringMarks = inputMarkField.getText().split(",");
-		System.out.println(Arrays.toString(stringMarks));
-		for(int i = 0 ; i <stringMarks.length; i++) {
-			inputMarks[i] = Integer.parseInt(stringMarks[i]);
-		}
-		
-		//get db type
-		
-		//get choice
-		if(constraintCheckBox.isSelected()) {
-			choice = "1";
-		}
-		if(predictCheckBox.isSelected()) {
-			choice = "2";
-		}
-		if(constraintCheckBox.isSelected() && predictCheckBox.isSelected()) {
-			choice = "3";
-		}
-		
-		System.out.println(inputCurriculum.toString() + "\r\n" + major1 + " " + major2 + nextYear.toString() + "\r\n" + Arrays.asList(inputMarks).toString() +"\r\n" + databaseType + "\r\n" + choice);
-		
-		if(nextYear == null || inputMarks == null || major1 == null || major2 == null || inputCurriculum == null
-			|| databaseType == null || choice == null) {
-			System.out.println("not done");
-			JOptionPane.showMessageDialog(null, "Some Fields Missing");
-		}else if (nextYear != null && inputMarks != null && inputMajor != null && inputCurriculum != null
-				&& databaseType != null && choice != null) {
-			System.out.println("done");
-			System.out.println(inputCurriculum + "\r\n" + major1 + " " + major2 + nextYear + "\r\n" + inputMarks +"\r\n" + databaseType + "\r\n" + choice);
-			//Driver driver = new Driver(inputCurriculum, major1, major2, nextYear, inputMarks, databaseType, choice);
-//			try {
-//				driver.start();
-//			} catch (SQLException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
+	}
+	
+	public void runQueries() {
+		try {
+			driver.start();
+			JOptionPane.showMessageDialog(null, driver.getReport(), "Report", JOptionPane.INFORMATION_MESSAGE);
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -145,7 +146,7 @@ public class GUI {
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 1010, 1000);
+		frame.setBounds(100, 100, 1000, 500);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(new FormLayout(new ColumnSpec[] {
 				FormSpecs.RELATED_GAP_COLSPEC,
@@ -165,6 +166,8 @@ public class GUI {
 				FormSpecs.RELATED_GAP_COLSPEC,
 				FormSpecs.DEFAULT_COLSPEC,},
 			new RowSpec[] {
+				FormSpecs.RELATED_GAP_ROWSPEC,
+				FormSpecs.DEFAULT_ROWSPEC,
 				FormSpecs.RELATED_GAP_ROWSPEC,
 				FormSpecs.DEFAULT_ROWSPEC,
 				FormSpecs.RELATED_GAP_ROWSPEC,
@@ -275,41 +278,26 @@ public class GUI {
 		major2Box.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		frame.getContentPane().add(major2Box, "6, 6, fill, default");
 		
-		JLabel lblSelectYourFirst = new JLabel("(4.1) Enter your first year courses");
+		JLabel lblSelectYourFirst = new JLabel("(4) Enter your first year courses");
 		lblSelectYourFirst.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		frame.getContentPane().add(lblSelectYourFirst, "2, 8, left, top");
 		
-		y1courses = new JTextField();
-		y1courses.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		frame.getContentPane().add(y1courses, "4, 8, fill, default");
-		y1courses.setColumns(10);
+		courses = new JTextArea();
+		courses.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		courses.setLineWrap(true);
+		courses.setWrapStyleWord(true);
+		JScrollPane scroll = new JScrollPane(courses);
+		//this.add(scroll);
+		frame.getContentPane().add(scroll, "4, 8, 5, 7, fill, default");
+		courses.setColumns(10);
 		
 		JLabel courseExampleLabel = new JLabel("e.g. CSC1015F, MAM1000W, STA1006S...");
-		courseExampleLabel.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		frame.getContentPane().add(courseExampleLabel, "6, 8, 3, 1, fill, default");
-		
-		JLabel lblSelectYourSecond = new JLabel("(4.2) Enter your second year courses");
-		lblSelectYourSecond.setHorizontalAlignment(SwingConstants.LEFT);
-		lblSelectYourSecond.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		frame.getContentPane().add(lblSelectYourSecond, "2, 10, left, default");
-		
-		y2courses = new JTextField();
-		y2courses.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		y2courses.setColumns(10);
-		frame.getContentPane().add(y2courses, "4, 10, fill, default");
-		
-		JLabel lblSelectYourThird = new JLabel("(4.3) Enter your third year courses");
-		lblSelectYourThird.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		frame.getContentPane().add(lblSelectYourThird, "2, 12, left, default");
-		
-		y3courses = new JTextField();
-		y3courses.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		y3courses.setColumns(10);
-		frame.getContentPane().add(y3courses, "4, 12, fill, default");
+		courseExampleLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
+		frame.getContentPane().add(courseExampleLabel, "2, 10, right, default");
 		
 		JLabel dbChoice = new JLabel("(5) Select your database");
 		dbChoice.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		frame.getContentPane().add(dbChoice, "2, 14, left, default");
+		frame.getContentPane().add(dbChoice, "2, 16, left, default");
 		
 		JRadioButton Neo4jSRadioButton = new JRadioButton("Neo4j (Small)");
 		Neo4jSRadioButton.addActionListener(new ActionListener() {
@@ -318,7 +306,7 @@ public class GUI {
 			}
 		});
 		Neo4jSRadioButton.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		frame.getContentPane().add(Neo4jSRadioButton, "4, 14");
+		frame.getContentPane().add(Neo4jSRadioButton, "4, 16");
 		
 		JRadioButton MySQLRadioButton = new JRadioButton("MySQL (Small)");
 		MySQLRadioButton.addActionListener(new ActionListener() {
@@ -327,7 +315,7 @@ public class GUI {
 			}
 		});
 		MySQLRadioButton.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		frame.getContentPane().add(MySQLRadioButton, "6, 14");
+		frame.getContentPane().add(MySQLRadioButton, "6, 16");
 		
 		JRadioButton Neo4jLRadioButton = new JRadioButton("Neo4j (Large)");
 		Neo4jLRadioButton.addActionListener(new ActionListener() {
@@ -336,7 +324,7 @@ public class GUI {
 			}
 		});
 		Neo4jLRadioButton.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		frame.getContentPane().add(Neo4jLRadioButton, "8, 14");
+		frame.getContentPane().add(Neo4jLRadioButton, "8, 16");
 		
 		ButtonGroup dbgroup = new ButtonGroup();
 		dbgroup.add(Neo4jSRadioButton);
@@ -345,33 +333,37 @@ public class GUI {
 		
 		JLabel serviceLabel = new JLabel("(6) Select your service");
 		serviceLabel.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		frame.getContentPane().add(serviceLabel, "2, 16");
+		frame.getContentPane().add(serviceLabel, "2, 18");
 		
 		constraintCheckBox = new JCheckBox("Constraint Checking");
-		constraintCheckBox.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				
-			}
-		});
 		constraintCheckBox.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		frame.getContentPane().add(constraintCheckBox, "4, 16");
+		frame.getContentPane().add(constraintCheckBox, "4, 18");
 		
 		predictCheckBox = new JCheckBox("Grade Prediction");
 		predictCheckBox.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		frame.getContentPane().add(predictCheckBox, "6, 16");
+		frame.getContentPane().add(predictCheckBox, "6, 18");
 		
 		JButton generate = new JButton("Generate Report");
 		generate.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		generate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				getInput();
-				
+				if (getInput()==true) {
+					if (choice.equals("1")) {
+						feedback.setText("Checking constraints...");
+					} else if (choice.equals("2")) {
+						feedback.setText("Generating prediction...");
+					} else if (choice.equals("3")) {
+						feedback.setText("Checking constraints & Generating prediction...");
+					}
+					runQueries();
+				}
 			}
 		});
-		frame.getContentPane().add(generate, "6, 18");
+		frame.getContentPane().add(generate, "6, 20");
 		
-		JLabel report = new JLabel("Report");
-		frame.getContentPane().add(report, "4, 20, 5, 7");
+		feedback = new JLabel("");
+		feedback.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		frame.getContentPane().add(feedback, "4, 22, 5, 1, fill, default");
 	}
 
 }

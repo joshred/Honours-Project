@@ -51,7 +51,8 @@ public class Utils {
 	 * +------+
 	 * @param in the array to print in a box
 	 */
-	public static void print(String[] in) {
+	public static String print(String[] in) {
+		String output = "";
 		int maxLength = 0;
 		for(String s: in) {
 			if(s.length() > maxLength) {
@@ -59,9 +60,13 @@ public class Utils {
 			}
 		}
 		System.out.println("+" + fill('-', maxLength + 2) + "+");
+		output += "+" + fill('-', maxLength + 2) + "+\r\n";
 		for(String s : in) {
 			System.out.println("| " + s + " " + fill(' ',maxLength - s.length())+"|");
+			output += "| " + s + " " + fill(' ',maxLength - s.length())+"|\r\n";
 		}
 		System.out.println("+" + fill('-', maxLength + 2) + "+\r\n"); 
+		output += "+" + fill('-', maxLength + 2) + "+\r\n";
+		return output;
 	}
 }
