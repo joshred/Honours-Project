@@ -265,6 +265,7 @@ public class Neo4jDatabase implements Database {
 	
 	//return true if any courses are missing from the curriculum
 	public boolean getMissingCourses() {
+		report += "** Degree Requirements **\r\n";
 		try {
 			StatementResult result = session.run(
 		            		"MATCH (m: Major)-[:REQUIRES {type: \"Compulsory\"}]->(c: Course)\r\n" + 
@@ -399,6 +400,7 @@ public class Neo4jDatabase implements Database {
 	
 	//retrieve list of students who have the same courses
 	public String getSimilarCourseStudents(String minSimilarCourses) {
+		report += "** Performance Prediction **\r\n";
 		try {
 			StatementResult courseResult = session.run(
 			        "MATCH (s:Student)-[:ENROLLED_IN]->(c:Course)\r\n" + 

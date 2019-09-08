@@ -8,7 +8,6 @@ import com.jgoodies.forms.layout.RowSpec;
 import DataGenerator.CourseListBuilder;
 
 import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.*;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
@@ -28,9 +27,12 @@ import java.util.Collections;
 import java.util.Vector;
 import java.awt.event.ActionEvent;
 import javax.swing.JCheckBox;
-import javax.swing.SwingConstants;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class GUI {
+	
+	private boolean yearIn, markIn, majorIn, courseIn, dbIn, choiceIn;
 
 	private JFrame frame;
 	private JTextField inputMarkField;
@@ -83,11 +85,10 @@ public class GUI {
 		initialize();
 	}
 	
-	public boolean getInput() {
-		if(nextYear == null || major1 == null || major2 == null || courses.getText() == null
-				|| databaseType == null || choice == null) {
-				JOptionPane.showMessageDialog(null, "Some Fields Missing");
-				return false;
+	public void getInput() throws SQLException {
+		System.out.println(yearIn + " " + markIn + " " + majorIn + " " + courseIn + " " + dbIn + " " + choiceIn + " ");
+		if(yearIn == false ||  markIn == false || majorIn == false || courseIn == false || dbIn == false || choiceIn == false) {
+			JOptionPane.showMessageDialog(null, "Some fields missing", "Error", JOptionPane.INFORMATION_MESSAGE);
 		}else {
 			//get curriculum
 			String[] y1 = courses.getText().replace(" ", "").split(",");
@@ -127,8 +128,10 @@ public class GUI {
 				choice = "3";
 			}
 			
+			System.out.println(curriculum + " " +  major1+ " " +  major2+ " " +  nextYear+ " " +  inputMarks+ " " +  databaseType+ " " +  choice);
 			driver = new Driver(curriculum, major1, major2, nextYear, inputMarks, databaseType, choice);
-			return true;
+			driver.start();
+			JOptionPane.showMessageDialog(null, driver.getReport(), "Report", JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 	
@@ -210,6 +213,17 @@ public class GUI {
 		frame.getContentPane().add(inputMarkLabel, "2, 4, left, default");
 		
 		inputMarkField = new JTextField();
+		inputMarkField.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				markIn = true;
+			}
+		});
+		inputMarkField.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+			}
+		});
 		inputMarkField.setEditable(true);
 		inputMarkField.setText("");
 		frame.getContentPane().add(inputMarkField, "4, 4, fill, default");
@@ -221,6 +235,7 @@ public class GUI {
 				if(firstRadioButton.isSelected()) {
 					inputMarkLabel.setText("(2) Enter your NBT marks e.g. 65, 75, 50");
 					nextYear = "1";
+					yearIn = true;
 				}
 			}
 		});
@@ -233,6 +248,7 @@ public class GUI {
 				if(secondRadioButton.isSelected()) {
 					inputMarkLabel.setText("(2) Enter your 1st year GPA e.g. 65");
 					nextYear = "2";
+					yearIn = true;
 				}
 			}
 		});
@@ -245,6 +261,7 @@ public class GUI {
 				if(thirdRadioButton.isSelected()) {
 					inputMarkLabel.setText("(2) Enter your 2nd year GPA e.g. 65");
 					nextYear = "3";
+					yearIn = true;
 				}
 			}
 		});
@@ -260,19 +277,21 @@ public class GUI {
 		majorLabel.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		frame.getContentPane().add(majorLabel, "2, 6, left, center");
 		
-		JComboBox major1Box = new JComboBox(new Vector(m1));
+		JComboBox<String> major1Box = new JComboBox<String>(new Vector<String>(m1));
 		major1Box.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				major1 = major1Box.getSelectedItem().toString();
+				majorIn = true;
 			}
 		});
 		major1Box.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		frame.getContentPane().add(major1Box, "4, 6, fill, default");
 		
-		JComboBox major2Box = new JComboBox(new Vector(m2));
+		JComboBox<String> major2Box = new JComboBox<String>(new Vector<String>(m2));
 		major2Box.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				major2 = major2Box.getSelectedItem().toString();
+				majorIn = true;
 			}
 		});
 		major2Box.setFont(new Font("Tahoma", Font.PLAIN, 18));
@@ -283,6 +302,12 @@ public class GUI {
 		frame.getContentPane().add(lblSelectYourFirst, "2, 8, left, top");
 		
 		courses = new JTextArea();
+		courses.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				courseIn = true;
+			}
+		});
 		courses.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		courses.setLineWrap(true);
 		courses.setWrapStyleWord(true);
@@ -303,6 +328,7 @@ public class GUI {
 		Neo4jSRadioButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				databaseType = "Neo4jSmall";
+				dbIn = true;
 			}
 		});
 		Neo4jSRadioButton.setFont(new Font("Tahoma", Font.PLAIN, 18));
@@ -312,6 +338,7 @@ public class GUI {
 		MySQLRadioButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				databaseType = "MySQL";
+				dbIn = true;
 			}
 		});
 		MySQLRadioButton.setFont(new Font("Tahoma", Font.PLAIN, 18));
@@ -321,6 +348,7 @@ public class GUI {
 		Neo4jLRadioButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				databaseType = "Neo4jLarge";
+				dbIn = true;
 			}
 		});
 		Neo4jLRadioButton.setFont(new Font("Tahoma", Font.PLAIN, 18));
@@ -336,10 +364,20 @@ public class GUI {
 		frame.getContentPane().add(serviceLabel, "2, 18");
 		
 		constraintCheckBox = new JCheckBox("Constraint Checking");
+		constraintCheckBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				choiceIn = true;
+			}
+		});
 		constraintCheckBox.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		frame.getContentPane().add(constraintCheckBox, "4, 18");
 		
 		predictCheckBox = new JCheckBox("Grade Prediction");
+		predictCheckBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				choiceIn = true;
+			}
+		});
 		predictCheckBox.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		frame.getContentPane().add(predictCheckBox, "6, 18");
 		
@@ -347,15 +385,11 @@ public class GUI {
 		generate.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		generate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (getInput()==true) {
-					if (choice.equals("1")) {
-						feedback.setText("Checking constraints...");
-					} else if (choice.equals("2")) {
-						feedback.setText("Generating prediction...");
-					} else if (choice.equals("3")) {
-						feedback.setText("Checking constraints & Generating prediction...");
-					}
-					runQueries();
+				try {
+					getInput();
+				} catch (SQLException e) {
+					System.out.println("Couldn't create a db driver");
+					e.printStackTrace();
 				}
 			}
 		});

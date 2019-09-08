@@ -329,10 +329,10 @@ public class MySQLDatabase implements Database {
 		    while (s2y3NQFResult.next()) {
 		    	s2y3NQF = (s0y3NQF/2) + (s2y3NQFResult.getInt("s2y3NQF"));
 		    }
-		    return "got counts";
+		   return "got counts";
 		}catch (Exception e) {
 			System.out.println("Error retrieving SQL course counts.");
-			return "No Counts";
+			return "no counts";
 		}
 	}
 	
@@ -409,41 +409,43 @@ public class MySQLDatabase implements Database {
 	//return true if the counts pass all if-statements
 	@Override
 	public boolean checkCounts(String counts) {
+		//counts not used
+		boolean flag = true;
 		ArrayList<String> descriptions = new ArrayList<String>();
     	if (fullCourses < 9) {
     		descriptions.add("Too few Full Courses");
-    		return false;
+    		flag = false;
     	}else {
     		descriptions.add("Enough Full Courses");
     	}
     	if (sciFullCourses < 6) {
     		descriptions.add("Too few Science Full Courses");
-    		return false;
+    		flag = false;
     	}else {
     		descriptions.add("Enough Science Full Courses");
     	}
     	if (seniorFullCourses < 4) {
     		descriptions.add("Too few Senior Full Courses");
-    		return false;
+    		flag = false;
     	}else {
     		descriptions.add("Enough Senior Full Courses");
     	}
     	if (seniorSciFullCourses < 3) {
     		descriptions.add("Too few Senior Science Full Courses");
-    		return false;
+    		flag = false;
     	}else {
     		descriptions.add("Enough Senior Science Full Courses");
     	}
     	if (thirdFullCourses < 2) {
     		descriptions.add("Too few Third Year Full Courses");
-    		return false;
+    		flag = false;
     	}else {
     		descriptions.add("Enough Third Year Full Courses");
     	}
     	if (s1y1 > 4 || s2y1 > 4) {
     		if (s1y1NQF > 72 || s2y1NQF > 72) {
     			descriptions.add("Too many First Year Half Courses");
-    			return false;
+    			flag = false;
     		}
     		descriptions.add("Enough First Year Half Courses");
     	}else {
@@ -452,7 +454,7 @@ public class MySQLDatabase implements Database {
     	if (s1y2 > 3 || s2y2 > 3 || s1y3 > 3 || s2y3 > 3) {
     		if (s1y2NQF > 72 || s2y2NQF > 72 || s1y3NQF > 72 || s2y3NQF > 72) {
     			descriptions.add("Too many Senior Year Half Courses");
-    			return false;
+    			flag = false;
     		}
     		descriptions.add("Enough Senior Year Half Courses");
     	}else {
@@ -460,19 +462,19 @@ public class MySQLDatabase implements Database {
     	}
     	if (totalNQF < 420) {
     		descriptions.add("Too few NQF credits");
-    		return false;
+    		flag = false;
     	}else {
     		descriptions.add("Enough NQF Credits");
     	}
     	if (sciNQF < 276) {
     		descriptions.add("Too few Science NQF credits");
-    		return false;
+    		flag = false;
     	}else {
     		descriptions.add("Enough Science NQF Credits");
     	}
     	if (thirdNQF < 120) {
     		descriptions.add("Too few Third Year NQF credits");
-    		return false;
+    		flag = false;
     	}else {
     		descriptions.add("Enough Third Year NQF Credits");
     	}
@@ -480,7 +482,7 @@ public class MySQLDatabase implements Database {
     		report += d + "\r\n";
     	}
     	Utils.print(descriptions.toArray(new String[0]));
-    	return true;
+    	return flag;
 	}
 	
 	//retrieve list of students who have the same courses

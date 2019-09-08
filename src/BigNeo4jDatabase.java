@@ -100,6 +100,7 @@ public class BigNeo4jDatabase extends Neo4jDatabase {
 	@Override
 	public String getSimilarCourseStudents(String minSimilarCourses) {
 		//minSimilarCourses not used
+		report += "** Performance Prediction **\r\n";
 		getRootStudents(super.major1, super.major2);
 		try {
 			StatementResult courseResult = session.run(
