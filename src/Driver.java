@@ -1,5 +1,4 @@
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Scanner;
 
 /**
@@ -12,18 +11,20 @@ public class Driver {
 
 	// Variables for user input/ selection
 	static Scanner s;
-	static String[] inputCurriculum;
+	static String inputCurriculum;
 	static String[] inputMajor;
 	static String major1, major2;
 	static String nextYear;
 	static int[] inputMarks;
 	static String databaseType;
 	static String choice;
-
+	
+	// Variables used to determine if certain checks have been passed
 	static boolean passedInput;
 	static boolean missingCourses;
 	static boolean passedRequirements;
-
+	
+	// Database object which represents a connection to either a Neo4j or MySQL database
 	static Database db;
 
 	// Variables passed between queries
@@ -32,12 +33,38 @@ public class Driver {
 	static String similarMarkStudents;
 	static String similarStudents;
 	
+	/**
+	 * Creates a Driver object (used by the GUI) to access a database
+	 * @param inputCurriculum the raw user input curiculum
+	 * @param curriculum a String of the user's input courses in a format used for queries
+	 * @param major1 the user's primary major
+	 * @param major2 the user's secondary major
+	 * @param nextYear the year for which the student is registering
+	 * @param inputMarks an array of marks the student achieved in the previous year
+	 * @param databaseType the chosen database type
+	 * @param choice the service chosen by the user (constraint checking or grade prediction)
+	 */
+	public Driver(String inputCurriculum, String curriculum, String major1, String major2, String nextYear, int[] inputMarks, String databaseType, String choice) {
+		Driver.inputCurriculum = inputCurriculum;
+		Driver.curriculum = curriculum; 
+		Driver.major1 = major1;
+		Driver.major2 = major2;
+		Driver.nextYear = nextYear;
+		Driver.inputMarks = inputMarks;
+		Driver.databaseType = databaseType;
+		Driver.choice = choice;
+	}
+	
+	/**
+	 * Returns the report variable stored in a database object which contains all the system output
+	 * @return The report stored in a database
+	 */
 	public String getReport() {
 		return db.getReport();
 	}
 
 	/**
-	 * Get user input in while loop to ensure correct format
+	 * Gets user input using a scanner in while loop to ensure correct format
 	 */
 	public static void getInput() {
 		s = new Scanner(System.in);
@@ -95,10 +122,10 @@ public class Driver {
 				System.out.println(
 						"Enter your entire curriculum (list of all courses from year 1 to 3) e.g. CSC1015F, MAM1000W... ");
 				System.out.print(">");
-				inputCurriculum = s.nextLine().replace(" ", "").split(",");
+				inputCurriculum = s.nextLine();
 
 				try {
-					curriculum = Utils.formatCurriculum(inputCurriculum); // convert the format of the curriculum
+					curriculum = Utils.formatCurriculum(inputCurriculum.replace(" ", "").split(",")); // convert the format of the curriculum
 				} catch (Exception e) {
 					System.out.print("Invalid curriculum input. Please reenter.");
 					inputCurriculum = null;
@@ -145,7 +172,7 @@ public class Driver {
 	}
 
 	/**
-	 * Create a link to the specific database chosen by the user
+	 * Creates a database object with a link to the specific database chosen by the user
 	 */
 	public static void createDatabase() {
 		// Create a link to the databases
@@ -172,10 +199,10 @@ public class Driver {
 	}
 	
 	/**
-	 * Method to find any missing courses and check course counts
+	 * Method which finds any missing courses and checks course counts
 	 */
  	public static void checkConstraints() {
-		// Check Course Counts
+
 		missingCourses = true;
 		passedRequirements = false;
 
@@ -185,7 +212,7 @@ public class Driver {
 		// determine if any core/ alternate courses are missing
 		missingCourses = db.getMissingCourses();
 		
-		//check CSC courses tekn in correct order
+		//check CSC courses taken in correct order
 		db.checkPrerequisites(curriculum);
 
 		// if there are no missing courses, get and check course counts
@@ -214,8 +241,7 @@ public class Driver {
 		System.out.println("Finding similar students for grade prediction...\r\n");
 
 		// get similar course students
-		String similarCutOff = Utils.similarCourseCutoff(Arrays.toString(inputCurriculum)); // find 50% of the length of
-																							// the input curriculum
+		String similarCutOff = Utils.similarCourseCutoff(inputCurriculum); // find 50% of the length of the input curriculum
 		similarCourseStudents = db.getSimilarCourseStudents(similarCutOff);
 
 		// get similar mark students
@@ -228,21 +254,15 @@ public class Driver {
 			db.predictGrade(similarMarkStudents);
 		}
 	}
-		
-	public Driver(String curriculum, String major1, String major2, String nextYear, int[] inputMarks, String databaseType, String choice) {
-		Driver.curriculum = curriculum; 
-		Driver.major1 = major1;
-		Driver.major2 = major2;
-		Driver.nextYear = nextYear;
-		Driver.inputMarks = inputMarks;
-		Driver.databaseType = databaseType;
-		Driver.choice = choice;
-	}
-	
+
+	/**
+	 * Runs the main method of the Driver class through the GUI
+	 * @throws SQLException
+	 */
 	public void start() throws SQLException {
 		createDatabase();
 
-		//call the correct methods depending on the user's choice
+		//call the corresponding methods depending on the user's choice
 		if (choice.equals("1")) {
 			checkConstraints();
 		} else if (choice.equals("2")) {
@@ -265,10 +285,10 @@ public class Driver {
 	 */
 	public static void main(String[] args) throws SQLException {
 		
-		getInput();
+		getInput(); //get scanner user input
 		createDatabase();
 
-		//call the correct methods depending on the user's choice
+		//call the corresponding methods depending on the user's choice
 		if (choice.equals("1")) {
 			checkConstraints();
 		} else if (choice.equals("2")) {

@@ -7,17 +7,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+/**
+ * A MySQL database object containing all methods needed to query MySQL
+ * @author Josh
+ */
 public class MySQLDatabase implements Database {
-	
-	//Objects to connect to the db
+
+	// Objects to connect to the db
 	Connection conn;
 	Statement st;
-	
-	//Variables passed to queries
+
+	// Variables passed to queries
 	String major1;
 	String major2;
 	String curriculum;
-	
 	String nextYear;
 	static String currentYear;
 	static int averageMark;
@@ -26,8 +29,8 @@ public class MySQLDatabase implements Database {
 	static String query;
 	static String inputMark;
 	static String predictedMark;
-	
-	//Variables for similarity queries/ output
+
+	// Variables for similarity queries/ output
 	static String minSimilarCourses;
 	static String similarCourseStudents;
 	static String similarCourseStudentsSize;
@@ -35,63 +38,63 @@ public class MySQLDatabase implements Database {
 	static String similarMarkStudentsSize;
 	static String GPA;
 	static String standardDeviation;
-	
-	//variables used for constraint checking
-	static int s1y1 ;
-	static int s2y1 ;
-	static int firstYearHalfCourses ;
-	static int s1y2 ;
-	static int s2y2 ; 
-	static int s1y3 ; 
-	static int s2y3 ; 
-	static int seniorYearHalfCourses ;
-	static int halfCourses ;
-	static int fullCourses ;
+
+	// variables used for constraint checking
+	static int s1y1;
+	static int s2y1;
+	static int firstYearHalfCourses;
+	static int s1y2;
+	static int s2y2;
+	static int s1y3;
+	static int s2y3;
+	static int seniorYearHalfCourses;
+	static int halfCourses;
+	static int fullCourses;
 	static int sciHalfCourses;
 	static int sciFullCourses;
-	static int seniorHalfCourses; 
-	static int seniorFullCourses ;
-	static int seniorSciHalfCourses ;
-	static int seniorSciFullCourses ;
-	static int thirdHalfCourses ;
-	static int thirdFullCourses ;
-	static int totalNQF ; 
-	static int sciNQF ; 
-	static int thirdNQF ; 
-	static int s0y1NQF ;
-	static int s1y1NQF ;
-	static int s2y1NQF ; 
-	static int s0y2NQF ;
-	static int s1y2NQF ;  
-	static int s2y2NQF ; 
-	static int s0y3NQF ;
-	static int s1y3NQF ;  
-	static int s2y3NQF ; 
+	static int seniorHalfCourses;
+	static int seniorFullCourses;
+	static int seniorSciHalfCourses;
+	static int seniorSciFullCourses;
+	static int thirdHalfCourses;
+	static int thirdFullCourses;
+	static int totalNQF;
+	static int sciNQF;
+	static int thirdNQF;
+	static int s0y1NQF;
+	static int s1y1NQF;
+	static int s2y1NQF;
+	static int s0y2NQF;
+	static int s1y2NQF;
+	static int s2y2NQF;
+	static int s0y3NQF;
+	static int s1y3NQF;
+	static int s2y3NQF;
 	static int firstYearHalfCoursesNQF;
-	static int seniorYearHalfCoursesNQF ;
-	
-	//Lists to store query results
+	static int seniorYearHalfCoursesNQF;
+
+	// Lists to store query results
 	static ArrayList<String> missingMustCourses = new ArrayList<String>();
 	static ArrayList<String> coursesNotEnrolledIn = new ArrayList<String>();
 	static ArrayList<String> combinationsNotEnrolledIn = new ArrayList<String>();
 	static ArrayList<String> coursesEnrolledIn = new ArrayList<String>();
 	static ArrayList<String> combinationsEnrolledIn = new ArrayList<String>();
-	
-	//String to store output
+
+	// String to store output
 	static String report;
-	
-	
+
 	/**
 	 * Create a new connection to a MySQL database and set parameters for the corresponding queries
 	 * @param nextYear The year the student is about to start, this affects the algorithms & nodes queried
-	 * @param curriculum2 
-	 * @param major2 
-	 * @param major1 
+	 * @param major1 the user's primary major 
+	 * @param major2 the user's secondary major
+	 * @param curriculum a String of the user's input courses
 	 * @param inputMarks The user input marks which affect the LB and UB parameters of queries
 	 * @throws SQLException
 	 */
-	public MySQLDatabase(String nextYear, String major1, String major2, String curriculum, int[] inputMarks) throws SQLException {
-		//access the db
+	public MySQLDatabase(String nextYear, String major1, String major2, String curriculum, int[] inputMarks)
+			throws SQLException {
+		// access the db
 		try {
 			String myDriver = "com.mysql.cj.jdbc.Driver";
 			String myUrl = "jdbc:mysql://localhost:3306/UCT Data";
@@ -102,466 +105,500 @@ public class MySQLDatabase implements Database {
 			e.printStackTrace();
 			System.out.println("Error connecting to SQL database.");
 		}
-		
+
 		report = "";
-		
-		//calculate average grade, LB, UB
+
+		// calculate average grade, LB, UB
 		this.curriculum = curriculum;
 		this.nextYear = nextYear;
-		averageMark = average(inputMarks);
+		averageMark = Utils.average(inputMarks);
 		LB = Integer.toString(averageMark - 5);
 		UB = Integer.toString(averageMark + 5);
-		
-		//Set query parameters affected by year
-		if(nextYear.equals("1")) {
+
+		// Set query parameters affected by year
+		if (nextYear.equals("1")) {
 			currentYear = "0";
 			query = "NBT";
 			inputMark = "NBT";
 			predictedMark = "first year GPA";
-		}else if(nextYear.equals("2")) {
+		} else if (nextYear.equals("2")) {
 			currentYear = "1";
 			query = "GPA";
 			inputMark = "first year GPA";
 			predictedMark = "second year GPA";
-		}else if(nextYear.equals("3")) {
+		} else if (nextYear.equals("3")) {
 			currentYear = "2";
 			query = "GPA";
 			inputMark = "second year GPA";
 			predictedMark = "third year GPA";
 		}
-		
-		//initalize result lists
+
+		// Initialise result lists
 		missingMustCourses = new ArrayList<String>();
 		coursesNotEnrolledIn = new ArrayList<String>();
 		combinationsNotEnrolledIn = new ArrayList<String>();
 		coursesEnrolledIn = new ArrayList<String>();
 		combinationsEnrolledIn = new ArrayList<String>();
 	}
-	
-	/**
-	 * Function to calculate a student's average input mark
-	 * @param list A list of marks
-	 * @return The average of the list of marks
+
+	/* (non-Javadoc) Check CSC courses are taken in correct order
+	 * @see Database#checkPrerequisites(java.lang.String)
 	 */
-	public int average(int[] list) {
-		int sum = 0;
-		for(int m : list) {
-			sum = sum + m;
-		}
-		return sum/list.length;
-	}
-	
 	public void checkPrerequisites(String courses) {
-		
-		ArrayList<String> userCourses = new ArrayList<String> (Arrays.asList(courses.replace("\"", "").replace(" ", "").split(",")));
+		// For all user input courses, extract those which are computer science
+		ArrayList<String> userCourses = new ArrayList<String>(
+				Arrays.asList(courses.replace("\"", "").replace(" ", "").split(",")));
 		ArrayList<String> cscCourses = new ArrayList<String>();
-		for (int i = 0; i < userCourses.size(); i ++) {
-			if(userCourses.get(i).startsWith("CSC")) {
+		for (int i = 0; i < userCourses.size(); i++) {
+			if (userCourses.get(i).startsWith("CSC")) {
 				cscCourses.add(userCourses.get(i));
 			}
 		}
-		System.out.println(cscCourses);
-		//System.out.println(userCourses);
-		String[] prereqArray = {"CSC1015F", "CSC1016S", "CSC2001F", "CSC2002S", "CSC2003S", "CSC3002F", "CSC3003S"};
-		ArrayList<String> prereq = new ArrayList<String>( Arrays.asList(prereqArray));
-		if (!prereq.equals(cscCourses)){
-			report += ( "Pre-requisitie courses taken out of order.\r\n");
-			Utils.print(new String[] {"Pre-requisitie courses taken out of order."});
-		}else {
-			//System.out.println("Fine");
+		
+		// Compare the order of computer science courses the student is taking to the required course order
+		String[] prereqArray = { "CSC1015F", "CSC1016S", "CSC2001F", "CSC2002S", "CSC2003S", "CSC3002F", "CSC3003S" };
+		ArrayList<String> prereq = new ArrayList<String>(Arrays.asList(prereqArray));
+		if (!prereq.equals(cscCourses)) {
+			report += ("Pre-requisitie courses taken out of order.\r\n");
+			Utils.print(new String[] { "Pre-requisitie courses taken out of order." });
+		} else {
 		}
 	}
-	
-	//retrieve course counts using input curriculum
+
+	/* (non-Javadoc) Retrieve course counts using input curriculum
+	 * @see Database#getCourseCounts()
+	 */
 	@Override
 	public String getCourseCounts() {
-		//define the queries
-		String s1y1query = "select count(CourseID) as s1y1 from courses where courseName in ("+ curriculum +") and (Semester = 0 or Semester = 1) and courses.Year = 1 ;";
-		String s2y1query = "select count(CourseID) as s2y1 from courses where courseName in ("+ curriculum +") and (Semester = 0 or Semester = 2) and courses.Year = 1 ;";
-		String s1y2query = "select count(CourseID) as s1y2 from courses where courseName in ("+ curriculum +") and (Semester = 0 or Semester = 1) and courses.Year = 2 ;";
-		String s2y2query = "select count(CourseID) as s2y2 from courses where courseName in ("+ curriculum +") and (Semester = 0 or Semester = 2) and courses.Year = 2 ;";
-		String s1y3query = "select count(CourseID) as s1y3 from courses where courseName in ("+ curriculum +") and (Semester = 0 or Semester = 1) and courses.Year = 3 ;";
-		String s2y3query = "select count(CourseID) as s2y3 from courses where courseName in ("+ curriculum +") and (Semester = 0 or Semester = 2) and courses.Year = 3 ;";
-		String halfCoursesquery = "select count(CourseID) as halfCourses from courses where courseName in ("+ curriculum +") and (Semester = 1 or Semester = 2) ;";
-		String fullCoursesquery = "select count(CourseID) as fullCourses from courses where courseName in ("+ curriculum +") and (Semester = 0 ) ;";
-		String sciHalfCoursesquery = "select count(CourseID) as sciHalfCourses from courses where courseName in ("+ curriculum +") and Faculty = \"SCI\" and (Semester = 1 or Semester = 2) ;";
-		String sciFullCoursesquery = "select count(CourseID) as sciFullCourses from courses where courseName in ("+ curriculum +") and Faculty = \"SCI\" and Semester = 0  ;";
-		String seniorSciHalfCoursesquery = "select count(CourseID) as seniorSciHalfCourses from courses where courseName in ("+ curriculum +") and (Semester = 1 or Semester = 2) and Faculty = \"SCI\" and (courses.Year = 2 or courses.Year = 3) ;";
-		String seniorSciFullCoursesquery = "select count(CourseID) as seniorSciFullCourses from courses where courseName in ("+ curriculum +") and (Semester = 0) and Faculty = \"SCI\" and (courses.Year = 2 or courses.Year = 3) ;";
-		String thirdHalfCoursesquery = "select count(CourseID) as thirdHalfCourses from courses where courseName in ("+ curriculum +") and (Semester = 1 or Semester = 2) and (courses.Year = 3) ;";
-		String thirdFullCoursesquery = "select count(CourseID) as thirdFullCourses from courses where courseName in ("+ curriculum +") and (Semester = 0) and (courses.Year = 3) ;";
-		String seniorHalfCoursesquery = "select count(CourseID) as seniorHalfCourses from courses where courseName in ("+ curriculum +") and (Semester = 1 or Semester = 2) and (courses.Year = 2 or courses.Year = 3) ;";
-		String seniorFullCoursesquery = "select count(CourseID) as seniorFullCourses from courses where courseName in ("+ curriculum +") and (Semester = 0) and (courses.Year = 2 or courses.Year = 3) ;";
-		
-		String totalNQFquery = "select coalesce(sum(Credits), 0) as totalNQF from courses where CourseName in ("+ curriculum +") ;";
-		String sciNQFquery = "select coalesce(sum(Credits), 0) as sciNQF from courses where CourseName in ("+ curriculum +") and Faculty = \"SCI\";";
-		String thirdNQFquery = "select coalesce(sum(Credits), 0) as thirdNQF from courses where CourseName in ("+ curriculum +") and courses.Year = 3 ;";
+		// define the queries
+		String s1y1query = "select count(CourseID) as s1y1 from courses where courseName in (" + curriculum
+				+ ") and (Semester = 0 or Semester = 1) and courses.Year = 1 ;";
+		String s2y1query = "select count(CourseID) as s2y1 from courses where courseName in (" + curriculum
+				+ ") and (Semester = 0 or Semester = 2) and courses.Year = 1 ;";
+		String s1y2query = "select count(CourseID) as s1y2 from courses where courseName in (" + curriculum
+				+ ") and (Semester = 0 or Semester = 1) and courses.Year = 2 ;";
+		String s2y2query = "select count(CourseID) as s2y2 from courses where courseName in (" + curriculum
+				+ ") and (Semester = 0 or Semester = 2) and courses.Year = 2 ;";
+		String s1y3query = "select count(CourseID) as s1y3 from courses where courseName in (" + curriculum
+				+ ") and (Semester = 0 or Semester = 1) and courses.Year = 3 ;";
+		String s2y3query = "select count(CourseID) as s2y3 from courses where courseName in (" + curriculum
+				+ ") and (Semester = 0 or Semester = 2) and courses.Year = 3 ;";
+		String halfCoursesquery = "select count(CourseID) as halfCourses from courses where courseName in ("
+				+ curriculum + ") and (Semester = 1 or Semester = 2) ;";
+		String fullCoursesquery = "select count(CourseID) as fullCourses from courses where courseName in ("
+				+ curriculum + ") and (Semester = 0 ) ;";
+		String sciHalfCoursesquery = "select count(CourseID) as sciHalfCourses from courses where courseName in ("
+				+ curriculum + ") and Faculty = \"SCI\" and (Semester = 1 or Semester = 2) ;";
+		String sciFullCoursesquery = "select count(CourseID) as sciFullCourses from courses where courseName in ("
+				+ curriculum + ") and Faculty = \"SCI\" and Semester = 0  ;";
+		String seniorSciHalfCoursesquery = "select count(CourseID) as seniorSciHalfCourses from courses where courseName in ("
+				+ curriculum
+				+ ") and (Semester = 1 or Semester = 2) and Faculty = \"SCI\" and (courses.Year = 2 or courses.Year = 3) ;";
+		String seniorSciFullCoursesquery = "select count(CourseID) as seniorSciFullCourses from courses where courseName in ("
+				+ curriculum
+				+ ") and (Semester = 0) and Faculty = \"SCI\" and (courses.Year = 2 or courses.Year = 3) ;";
+		String thirdHalfCoursesquery = "select count(CourseID) as thirdHalfCourses from courses where courseName in ("
+				+ curriculum + ") and (Semester = 1 or Semester = 2) and (courses.Year = 3) ;";
+		String thirdFullCoursesquery = "select count(CourseID) as thirdFullCourses from courses where courseName in ("
+				+ curriculum + ") and (Semester = 0) and (courses.Year = 3) ;";
+		String seniorHalfCoursesquery = "select count(CourseID) as seniorHalfCourses from courses where courseName in ("
+				+ curriculum + ") and (Semester = 1 or Semester = 2) and (courses.Year = 2 or courses.Year = 3) ;";
+		String seniorFullCoursesquery = "select count(CourseID) as seniorFullCourses from courses where courseName in ("
+				+ curriculum + ") and (Semester = 0) and (courses.Year = 2 or courses.Year = 3) ;";
 
-		String s0y1NQFquery = "select coalesce(sum(Credits), 0) as s0y1NQF from courses where courseName in ("+ curriculum +") and Semester = 0 and courses.Year = 1 ;";
-		String s1y1NQFquery = "select coalesce(sum(Credits), 0) as s1y1NQF from courses where courseName in ("+ curriculum +") and Semester = 1 and courses.Year = 1 ;";
-		String s2y1NQFquery = "select coalesce(sum(Credits), 0) as s2y1NQF from courses where courseName in ("+ curriculum +") and Semester = 2 and courses.Year = 1 ;";
-		String s0y2NQFquery = "select coalesce(sum(Credits), 0) as s0y2NQF from courses where courseName in ("+ curriculum +") and Semester = 0 and courses.Year = 2 ;";
-		String s1y2NQFquery = "select coalesce(sum(Credits), 0) as s1y2NQF from courses where courseName in ("+ curriculum +") and Semester = 1 and courses.Year = 2 ;";
-		String s2y2NQFquery = "select coalesce(sum(Credits), 0) as s2y2NQF from courses where courseName in ("+ curriculum +") and Semester = 2 and courses.Year = 2 ;";
-		String s0y3NQFquery = "select coalesce(sum(Credits), 0) as s0y3NQF from courses where courseName in ("+ curriculum +") and Semester = 0 and courses.Year = 3 ;";
-		String s1y3NQFquery = "select coalesce(sum(Credits), 0) as s1y3NQF from courses where courseName in ("+ curriculum +") and Semester = 1 and courses.Year = 3 ;";
-		String s2y3NQFquery = "select coalesce(sum(Credits), 0) as s2y3NQF from courses where courseName in ("+ curriculum +") and Semester = 2 and courses.Year = 3 ;";
-		
-		//run queries and retrieve results
+		String totalNQFquery = "select coalesce(sum(Credits), 0) as totalNQF from courses where CourseName in ("
+				+ curriculum + ") ;";
+		String sciNQFquery = "select coalesce(sum(Credits), 0) as sciNQF from courses where CourseName in ("
+				+ curriculum + ") and Faculty = \"SCI\";";
+		String thirdNQFquery = "select coalesce(sum(Credits), 0) as thirdNQF from courses where CourseName in ("
+				+ curriculum + ") and courses.Year = 3 ;";
+
+		String s0y1NQFquery = "select coalesce(sum(Credits), 0) as s0y1NQF from courses where courseName in ("
+				+ curriculum + ") and Semester = 0 and courses.Year = 1 ;";
+		String s1y1NQFquery = "select coalesce(sum(Credits), 0) as s1y1NQF from courses where courseName in ("
+				+ curriculum + ") and Semester = 1 and courses.Year = 1 ;";
+		String s2y1NQFquery = "select coalesce(sum(Credits), 0) as s2y1NQF from courses where courseName in ("
+				+ curriculum + ") and Semester = 2 and courses.Year = 1 ;";
+		String s0y2NQFquery = "select coalesce(sum(Credits), 0) as s0y2NQF from courses where courseName in ("
+				+ curriculum + ") and Semester = 0 and courses.Year = 2 ;";
+		String s1y2NQFquery = "select coalesce(sum(Credits), 0) as s1y2NQF from courses where courseName in ("
+				+ curriculum + ") and Semester = 1 and courses.Year = 2 ;";
+		String s2y2NQFquery = "select coalesce(sum(Credits), 0) as s2y2NQF from courses where courseName in ("
+				+ curriculum + ") and Semester = 2 and courses.Year = 2 ;";
+		String s0y3NQFquery = "select coalesce(sum(Credits), 0) as s0y3NQF from courses where courseName in ("
+				+ curriculum + ") and Semester = 0 and courses.Year = 3 ;";
+		String s1y3NQFquery = "select coalesce(sum(Credits), 0) as s1y3NQF from courses where courseName in ("
+				+ curriculum + ") and Semester = 1 and courses.Year = 3 ;";
+		String s2y3NQFquery = "select coalesce(sum(Credits), 0) as s2y3NQF from courses where courseName in ("
+				+ curriculum + ") and Semester = 2 and courses.Year = 3 ;";
+
+		// run queries and retrieve results
 		try {
 			ResultSet s1y1Result = st.executeQuery(s1y1query);
-		    while (s1y1Result.next()) {
-		    	s1y1 = (s1y1Result.getInt("s1y1"));
-		    }
-		    ResultSet s2y1Result = st.executeQuery(s2y1query);
-		    while (s2y1Result.next()) {
-		    	s2y1 = (s2y1Result.getInt("s2y1"));
-		    }
-		    ResultSet s1y2Result = st.executeQuery(s1y2query);
-		    while (s1y2Result.next()) {
-		    	s1y2 = (s1y2Result.getInt("s1y2"));
-		    }
-		    ResultSet s2y2Result = st.executeQuery(s2y2query);
-		    while (s2y2Result.next()) {
-		    	s2y2 = (s2y2Result.getInt("s2y2"));
-		    }
-		    ResultSet s1y3Result = st.executeQuery(s1y3query);
-		    while (s1y3Result.next()) {
-		    	s1y3 = (s1y3Result.getInt("s1y3"));
-		    }
-		    ResultSet s2y3Result = st.executeQuery(s2y3query);
-		    while (s2y3Result.next()) {
-		    	s2y3 = (s2y3Result.getInt("s2y3"));
-		    }
-		    
-		    ResultSet halfCoursesResult = st.executeQuery(halfCoursesquery);
-		    while (halfCoursesResult.next()) {
-		    	halfCourses = (halfCoursesResult.getInt("halfCourses"));
-		    }
-		    ResultSet fullCoursesResult = st.executeQuery(fullCoursesquery);
-		    while (fullCoursesResult.next()) {
-		    	fullCourses = (halfCourses/2) + (fullCoursesResult.getInt("fullCourses"));
-		    }
-		    
-		    ResultSet sciHalfCoursesResult = st.executeQuery(sciHalfCoursesquery);
-		    while (sciHalfCoursesResult.next()) {
-		    	sciHalfCourses = (sciHalfCoursesResult.getInt("sciHalfCourses"));
-		    }
-		    ResultSet sciFullCoursesResult = st.executeQuery(sciFullCoursesquery);
-		    while (sciFullCoursesResult.next()) {
-		    	sciFullCourses = (sciHalfCourses/2) + (sciFullCoursesResult.getInt("sciFullCourses"));
-		    }
-		    
-		    ResultSet seniorHalfCoursesResult = st.executeQuery(seniorHalfCoursesquery);
-		    while (seniorHalfCoursesResult.next()) {
-		    	seniorHalfCourses = (seniorHalfCoursesResult.getInt("seniorHalfCourses"));
-		    }
-		    ResultSet seniorFullCoursesResult = st.executeQuery(seniorFullCoursesquery);
-		    while (seniorFullCoursesResult.next()) {
-		    	seniorFullCourses = (seniorHalfCourses/2) + (seniorFullCoursesResult.getInt("seniorFullCourses"));
-		    }
-		    
-		    ResultSet seniorSciHalfCoursesResult = st.executeQuery(seniorSciHalfCoursesquery);
-		    while (seniorSciHalfCoursesResult.next()) {
-		    	seniorSciHalfCourses = (seniorSciHalfCoursesResult.getInt("seniorSciHalfCourses"));
-		    }
-		    ResultSet seniorSciFullCoursesResult = st.executeQuery(seniorSciFullCoursesquery);
-		    while (seniorSciFullCoursesResult.next()) {
-		    	seniorSciFullCourses = (seniorSciHalfCourses/2) + (seniorSciFullCoursesResult.getInt("seniorSciFullCourses"));
-		    }
-		    
-		    ResultSet thirdHalfCoursesResult = st.executeQuery(thirdHalfCoursesquery);
-		    while (thirdHalfCoursesResult.next()) {
-		    	thirdHalfCourses = (thirdHalfCoursesResult.getInt("thirdHalfCourses"));
-		    }
-		    ResultSet thirdFullCoursesResult = st.executeQuery(thirdFullCoursesquery);
-		    while (thirdFullCoursesResult.next()) {
-		    	thirdFullCourses = (thirdHalfCourses/2) + (thirdFullCoursesResult.getInt("thirdFullCourses"));
-		    }
-		    
-		    // NQF COUNTS
-		    ResultSet totalNQFResult = st.executeQuery(totalNQFquery);
-		    while (totalNQFResult.next()) {
-		    	totalNQF =  (totalNQFResult.getInt("totalNQF"));
-		    }
-		    ResultSet sciNQFResult = st.executeQuery(sciNQFquery);
-		    while (sciNQFResult.next()) {
-		    	sciNQF =  (sciNQFResult.getInt("sciNQF"));
-		    }
-		    ResultSet thirdNQFResult = st.executeQuery(thirdNQFquery);
-		    while (thirdNQFResult.next()) {
-		    	thirdNQF =  (thirdNQFResult.getInt("thirdNQF"));
-		    }
-		    
-		    ResultSet s0y1NQFResult = st.executeQuery(s0y1NQFquery);
-		    while (s0y1NQFResult.next()) {
-		    	s0y1NQF = (s0y1NQFResult.getInt("s0y1NQF"));
-		    }
-		    ResultSet s1y1NQFResult = st.executeQuery(s1y1NQFquery);
-		    while (s1y1NQFResult.next()) {
-		    	s1y1NQF = (s0y1NQF/2) + (s1y1NQFResult.getInt("s1y1NQF"));
-		    }
-		    ResultSet s2y1NQFResult = st.executeQuery(s2y1NQFquery);
-		    while (s2y1NQFResult.next()) {
-		    	s2y1NQF = (s0y1NQF/2) + (s2y1NQFResult.getInt("s2y1NQF"));
-		    }
-		    ResultSet s0y2NQFResult = st.executeQuery(s0y2NQFquery);
-		    while (s0y2NQFResult.next()) {
-		    	s0y2NQF = (s0y2NQFResult.getInt("s0y2NQF"));
-		    }
-		    ResultSet s1y2NQFResult = st.executeQuery(s1y2NQFquery);
-		    while (s1y2NQFResult.next()) {
-		    	s1y2NQF = (s0y2NQF/2) + (s1y2NQFResult.getInt("s1y2NQF"));
-		    }
-		    ResultSet s2y2NQFResult = st.executeQuery(s2y2NQFquery);
-		    while (s2y2NQFResult.next()) {
-		    	s2y2NQF = (s0y2NQF/2) + (s2y2NQFResult.getInt("s2y2NQF"));
-		    }
-		    ResultSet s0y3NQFResult = st.executeQuery(s0y3NQFquery);
-		    while (s0y3NQFResult.next()) {
-		    	s0y3NQF = (s0y3NQFResult.getInt("s0y3NQF"));
-		    }
-		    ResultSet s1y3NQFResult = st.executeQuery(s1y3NQFquery);
-		    while (s1y3NQFResult.next()) {
-		    	s1y3NQF = (s0y3NQF/2) + (s1y3NQFResult.getInt("s1y3NQF"));
-		    }
-		    ResultSet s2y3NQFResult = st.executeQuery(s2y3NQFquery);
-		    while (s2y3NQFResult.next()) {
-		    	s2y3NQF = (s0y3NQF/2) + (s2y3NQFResult.getInt("s2y3NQF"));
-		    }
-		   return "got counts";
-		}catch (Exception e) {
+			while (s1y1Result.next()) {
+				s1y1 = (s1y1Result.getInt("s1y1"));
+			}
+			ResultSet s2y1Result = st.executeQuery(s2y1query);
+			while (s2y1Result.next()) {
+				s2y1 = (s2y1Result.getInt("s2y1"));
+			}
+			ResultSet s1y2Result = st.executeQuery(s1y2query);
+			while (s1y2Result.next()) {
+				s1y2 = (s1y2Result.getInt("s1y2"));
+			}
+			ResultSet s2y2Result = st.executeQuery(s2y2query);
+			while (s2y2Result.next()) {
+				s2y2 = (s2y2Result.getInt("s2y2"));
+			}
+			ResultSet s1y3Result = st.executeQuery(s1y3query);
+			while (s1y3Result.next()) {
+				s1y3 = (s1y3Result.getInt("s1y3"));
+			}
+			ResultSet s2y3Result = st.executeQuery(s2y3query);
+			while (s2y3Result.next()) {
+				s2y3 = (s2y3Result.getInt("s2y3"));
+			}
+
+			ResultSet halfCoursesResult = st.executeQuery(halfCoursesquery);
+			while (halfCoursesResult.next()) {
+				halfCourses = (halfCoursesResult.getInt("halfCourses"));
+			}
+			ResultSet fullCoursesResult = st.executeQuery(fullCoursesquery);
+			while (fullCoursesResult.next()) {
+				fullCourses = (halfCourses / 2) + (fullCoursesResult.getInt("fullCourses"));
+			}
+
+			ResultSet sciHalfCoursesResult = st.executeQuery(sciHalfCoursesquery);
+			while (sciHalfCoursesResult.next()) {
+				sciHalfCourses = (sciHalfCoursesResult.getInt("sciHalfCourses"));
+			}
+			ResultSet sciFullCoursesResult = st.executeQuery(sciFullCoursesquery);
+			while (sciFullCoursesResult.next()) {
+				sciFullCourses = (sciHalfCourses / 2) + (sciFullCoursesResult.getInt("sciFullCourses"));
+			}
+
+			ResultSet seniorHalfCoursesResult = st.executeQuery(seniorHalfCoursesquery);
+			while (seniorHalfCoursesResult.next()) {
+				seniorHalfCourses = (seniorHalfCoursesResult.getInt("seniorHalfCourses"));
+			}
+			ResultSet seniorFullCoursesResult = st.executeQuery(seniorFullCoursesquery);
+			while (seniorFullCoursesResult.next()) {
+				seniorFullCourses = (seniorHalfCourses / 2) + (seniorFullCoursesResult.getInt("seniorFullCourses"));
+			}
+
+			ResultSet seniorSciHalfCoursesResult = st.executeQuery(seniorSciHalfCoursesquery);
+			while (seniorSciHalfCoursesResult.next()) {
+				seniorSciHalfCourses = (seniorSciHalfCoursesResult.getInt("seniorSciHalfCourses"));
+			}
+			ResultSet seniorSciFullCoursesResult = st.executeQuery(seniorSciFullCoursesquery);
+			while (seniorSciFullCoursesResult.next()) {
+				seniorSciFullCourses = (seniorSciHalfCourses / 2)
+						+ (seniorSciFullCoursesResult.getInt("seniorSciFullCourses"));
+			}
+
+			ResultSet thirdHalfCoursesResult = st.executeQuery(thirdHalfCoursesquery);
+			while (thirdHalfCoursesResult.next()) {
+				thirdHalfCourses = (thirdHalfCoursesResult.getInt("thirdHalfCourses"));
+			}
+			ResultSet thirdFullCoursesResult = st.executeQuery(thirdFullCoursesquery);
+			while (thirdFullCoursesResult.next()) {
+				thirdFullCourses = (thirdHalfCourses / 2) + (thirdFullCoursesResult.getInt("thirdFullCourses"));
+			}
+
+			// NQF COUNTS
+			ResultSet totalNQFResult = st.executeQuery(totalNQFquery);
+			while (totalNQFResult.next()) {
+				totalNQF = (totalNQFResult.getInt("totalNQF"));
+			}
+			ResultSet sciNQFResult = st.executeQuery(sciNQFquery);
+			while (sciNQFResult.next()) {
+				sciNQF = (sciNQFResult.getInt("sciNQF"));
+			}
+			ResultSet thirdNQFResult = st.executeQuery(thirdNQFquery);
+			while (thirdNQFResult.next()) {
+				thirdNQF = (thirdNQFResult.getInt("thirdNQF"));
+			}
+
+			ResultSet s0y1NQFResult = st.executeQuery(s0y1NQFquery);
+			while (s0y1NQFResult.next()) {
+				s0y1NQF = (s0y1NQFResult.getInt("s0y1NQF"));
+			}
+			ResultSet s1y1NQFResult = st.executeQuery(s1y1NQFquery);
+			while (s1y1NQFResult.next()) {
+				s1y1NQF = (s0y1NQF / 2) + (s1y1NQFResult.getInt("s1y1NQF"));
+			}
+			ResultSet s2y1NQFResult = st.executeQuery(s2y1NQFquery);
+			while (s2y1NQFResult.next()) {
+				s2y1NQF = (s0y1NQF / 2) + (s2y1NQFResult.getInt("s2y1NQF"));
+			}
+			ResultSet s0y2NQFResult = st.executeQuery(s0y2NQFquery);
+			while (s0y2NQFResult.next()) {
+				s0y2NQF = (s0y2NQFResult.getInt("s0y2NQF"));
+			}
+			ResultSet s1y2NQFResult = st.executeQuery(s1y2NQFquery);
+			while (s1y2NQFResult.next()) {
+				s1y2NQF = (s0y2NQF / 2) + (s1y2NQFResult.getInt("s1y2NQF"));
+			}
+			ResultSet s2y2NQFResult = st.executeQuery(s2y2NQFquery);
+			while (s2y2NQFResult.next()) {
+				s2y2NQF = (s0y2NQF / 2) + (s2y2NQFResult.getInt("s2y2NQF"));
+			}
+			ResultSet s0y3NQFResult = st.executeQuery(s0y3NQFquery);
+			while (s0y3NQFResult.next()) {
+				s0y3NQF = (s0y3NQFResult.getInt("s0y3NQF"));
+			}
+			ResultSet s1y3NQFResult = st.executeQuery(s1y3NQFquery);
+			while (s1y3NQFResult.next()) {
+				s1y3NQF = (s0y3NQF / 2) + (s1y3NQFResult.getInt("s1y3NQF"));
+			}
+			ResultSet s2y3NQFResult = st.executeQuery(s2y3NQFquery);
+			while (s2y3NQFResult.next()) {
+				s2y3NQF = (s0y3NQF / 2) + (s2y3NQFResult.getInt("s2y3NQF"));
+			}
+			return "got counts";
+		} catch (Exception e) {
 			System.out.println("Error retrieving SQL course counts.");
 			return "no counts";
 		}
 	}
-	
-	//return true if any courses are missing from the curriculum
+
+	/* (non-Javadoc) Return true if any courses are missing from the curriculum
+	 * @see Database#getMissingCourses()
+	 */
 	@Override
 	public boolean getMissingCourses() {
 		report += "** Degree Requirements **\r\n";
-		//define the queries
-		String missingMustCoursesquery = "select c.CourseName as missingMustCourses \r\n" + 
-				"from courses c \r\n" + 
-				"right join requires r on r.CourseID = c.CourseID and Combination = 0 \r\n" + 
-				"and MajorID = \"CSC05\" \r\n" + 
-				"where c.CourseName is not null and c.CourseName not in ("+ curriculum +");";
-		String coursesNotEnrolledInquery = "select c.CourseName as coursesNotEnrolledIn, r.Combination as combinationsNotEnrolledIn\r\n" + 
-				"from courses c \r\n" + 
-				"right join requires r on r.CourseID = c.CourseID and Combination <> 0 \r\n" + 
-				"and MajorID = \"CSC05\" \r\n" + 
-				"where c.CourseName is not null and c.CourseName not in ("+ curriculum +");";
-		String coursesEnrolledInquery = "select c.CourseName as coursesEnrolledIn, r.Combination as combinationsEnrolledIn\r\n" + 
-				"from courses c \r\n" + 
-				"right join requires r on r.CourseID = c.CourseID and Combination <> 0 \r\n" + 
-				"and MajorID = \"CSC05\" \r\n" + 
-				"where c.CourseName is not null and c.CourseName in ("+ curriculum +");";
-		
-		//run the Course queries
+		// define the queries
+		String missingMustCoursesquery = "select c.CourseName as missingMustCourses \r\n" + "from courses c \r\n"
+				+ "right join requires r on r.CourseID = c.CourseID and Combination = 0 \r\n"
+				+ "and MajorID = \"CSC05\" \r\n" + "where c.CourseName is not null and c.CourseName not in ("
+				+ curriculum + ");";
+		String coursesNotEnrolledInquery = "select c.CourseName as coursesNotEnrolledIn, r.Combination as combinationsNotEnrolledIn\r\n"
+				+ "from courses c \r\n" + "right join requires r on r.CourseID = c.CourseID and Combination <> 0 \r\n"
+				+ "and MajorID = \"CSC05\" \r\n" + "where c.CourseName is not null and c.CourseName not in ("
+				+ curriculum + ");";
+		String coursesEnrolledInquery = "select c.CourseName as coursesEnrolledIn, r.Combination as combinationsEnrolledIn\r\n"
+				+ "from courses c \r\n" + "right join requires r on r.CourseID = c.CourseID and Combination <> 0 \r\n"
+				+ "and MajorID = \"CSC05\" \r\n" + "where c.CourseName is not null and c.CourseName in (" + curriculum
+				+ ");";
+
+		// run the Course queries and store results
 		try {
-			
-		    ResultSet missingMustCoursesResult = st.executeQuery(missingMustCoursesquery);
-		    while (missingMustCoursesResult.next()) {
-		    	missingMustCourses.add(missingMustCoursesResult.getString("missingMustCourses")); 
-		    }
-		    ResultSet coursesNotEnrolledInResult = st.executeQuery(coursesNotEnrolledInquery);
-		    while (coursesNotEnrolledInResult.next()) {
-		    	coursesNotEnrolledIn.add(coursesNotEnrolledInResult.getString("coursesNotEnrolledIn")); 
-		    	combinationsNotEnrolledIn.add(coursesNotEnrolledInResult.getString("combinationsNotEnrolledIn")); 
-		    }
-		    ResultSet coursesEnrolledInResult = st.executeQuery(coursesEnrolledInquery);
-		    while (coursesEnrolledInResult.next()) {
-		    	coursesEnrolledIn.add(coursesEnrolledInResult.getString("coursesEnrolledIn")); 
-		    	combinationsEnrolledIn.add(coursesEnrolledInResult.getString("combinationsEnrolledIn")); 
-		    }
+
+			ResultSet missingMustCoursesResult = st.executeQuery(missingMustCoursesquery);
+			while (missingMustCoursesResult.next()) {
+				missingMustCourses.add(missingMustCoursesResult.getString("missingMustCourses"));
+			}
+			ResultSet coursesNotEnrolledInResult = st.executeQuery(coursesNotEnrolledInquery);
+			while (coursesNotEnrolledInResult.next()) {
+				coursesNotEnrolledIn.add(coursesNotEnrolledInResult.getString("coursesNotEnrolledIn"));
+				combinationsNotEnrolledIn.add(coursesNotEnrolledInResult.getString("combinationsNotEnrolledIn"));
+			}
+			ResultSet coursesEnrolledInResult = st.executeQuery(coursesEnrolledInquery);
+			while (coursesEnrolledInResult.next()) {
+				coursesEnrolledIn.add(coursesEnrolledInResult.getString("coursesEnrolledIn"));
+				combinationsEnrolledIn.add(coursesEnrolledInResult.getString("combinationsEnrolledIn"));
+			}
 		} catch (Exception e) {
 			System.out.println("Error retrieving SQL missing courses.");
 			return true;
 		}
-		
-		//check that compulsory courses are taken and at least some optional courses z
-	    if (!missingMustCourses.isEmpty()) {
-	    	report += "Missing the following course(s): "+ missingMustCourses.toString() + "\r\n";
-	    	Utils.print(new String [] {"Missing the following course(s): "+ missingMustCourses.toString()});
-	    	return true;
-	    }if (combinationsEnrolledIn.isEmpty()) {
-	    	report += "You must enroll in one or more of the following course(s): "+ coursesNotEnrolledIn.toString() + "\r\n";
-	    	Utils.print(new String [] {"You must enroll in one or more of the following course(s): "+ coursesNotEnrolledIn.toString()});
-	    	return true;
-	    }
-	    
-	    // Check that all optional courses are taken in the correct combination
-	    Collection<String> takenCombinations = combinationsEnrolledIn; // e.g. [1,2] taken courses from combinations 1 & 2
-    	Collection<String> missingCombinations = combinationsNotEnrolledIn; // e.g. [1] missing courses from combinations 1
-    	takenCombinations.retainAll(missingCombinations); // e.g. [1] intersection of two sets = 1, so there is a component missing 
 
-	    if (takenCombinations.size() > 0) {
-	    	String notEnrolledIn = (String) takenCombinations.toArray()[0];
-	    	int indexOfCourse = combinationsNotEnrolledIn.indexOf(notEnrolledIn);
-	    	String missingCourseCombination = coursesNotEnrolledIn.get(indexOfCourse);
-	    	report += "Missing the other course component: "+ missingCourseCombination + "\r\n";
-	    	Utils.print(new String [] {"Missing the other course component: "+ missingCourseCombination});
-	    	return true;
-	    }
-	    return false;
+		// check that compulsory courses and at least some optional courses are taken
+		if (!missingMustCourses.isEmpty()) {
+			report += "Missing the following course(s): " + missingMustCourses.toString() + "\r\n";
+			Utils.print(new String[] { "Missing the following course(s): " + missingMustCourses.toString() });
+			return true;
+		}
+		// Check if student is missing any alternate courses
+		if (combinationsEnrolledIn.isEmpty()) {
+			report += "You must enroll in one or more of the following course(s): " + coursesNotEnrolledIn.toString()
+					+ "\r\n";
+			Utils.print(new String[] {
+					"You must enroll in one or more of the following course(s): " + coursesNotEnrolledIn.toString() });
+			return true;
+		}
+
+		Collection<String> takenCombinations = combinationsEnrolledIn; 
+		// e.g. [1,2] taken courses from combinations 1 & 2
+		Collection<String> missingCombinations = combinationsNotEnrolledIn;
+		// e.g. [1] missing courses from combinations 1
+		takenCombinations.retainAll(missingCombinations);
+		// e.g. [1] intersection of takenCombinations and missingCombinations = [1], so there is a course component of [1] missing
+
+		// Check that all optional courses are taken in the correct combination
+		if (takenCombinations.size() > 0) {
+			String notEnrolledIn = (String) takenCombinations.toArray()[0];
+			int indexOfCourse = combinationsNotEnrolledIn.indexOf(notEnrolledIn);
+			String missingCourseCombination = coursesNotEnrolledIn.get(indexOfCourse);
+			report += "Missing the other course component: " + missingCourseCombination + "\r\n";
+			Utils.print(new String[] { "Missing the other course component: " + missingCourseCombination });
+			return true;
+		}
+		return false;
 	}
-	
-	//return true if the counts pass all if-statements
+
+	/* (non-Javadoc) Return true if the counts pass all if-statements
+	 * @see Database#checkCounts(java.lang.String)
+	 */
 	@Override
 	public boolean checkCounts(String counts) {
-		//counts not used
-		boolean flag = true;
+		// counts is not used
+		boolean flag = true; // records if any count is violated
 		ArrayList<String> descriptions = new ArrayList<String>();
-    	if (fullCourses < 9) {
-    		descriptions.add("Too few Full Courses");
-    		flag = false;
-    	}else {
-    		descriptions.add("Enough Full Courses");
-    	}
-    	if (sciFullCourses < 6) {
-    		descriptions.add("Too few Science Full Courses");
-    		flag = false;
-    	}else {
-    		descriptions.add("Enough Science Full Courses");
-    	}
-    	if (seniorFullCourses < 4) {
-    		descriptions.add("Too few Senior Full Courses");
-    		flag = false;
-    	}else {
-    		descriptions.add("Enough Senior Full Courses");
-    	}
-    	if (seniorSciFullCourses < 3) {
-    		descriptions.add("Too few Senior Science Full Courses");
-    		flag = false;
-    	}else {
-    		descriptions.add("Enough Senior Science Full Courses");
-    	}
-    	if (thirdFullCourses < 2) {
-    		descriptions.add("Too few Third Year Full Courses");
-    		flag = false;
-    	}else {
-    		descriptions.add("Enough Third Year Full Courses");
-    	}
-    	if (s1y1 > 4 || s2y1 > 4) {
-    		if (s1y1NQF > 72 || s2y1NQF > 72) {
-    			descriptions.add("Too many First Year Half Courses");
-    			flag = false;
-    		}
-    		descriptions.add("Enough First Year Half Courses");
-    	}else {
-    		descriptions.add("Enough First Year Half Courses");
-    	}
-    	if (s1y2 > 3 || s2y2 > 3 || s1y3 > 3 || s2y3 > 3) {
-    		if (s1y2NQF > 72 || s2y2NQF > 72 || s1y3NQF > 72 || s2y3NQF > 72) {
-    			descriptions.add("Too many Senior Year Half Courses");
-    			flag = false;
-    		}
-    		descriptions.add("Enough Senior Year Half Courses");
-    	}else {
-    		descriptions.add("Enough Senior Year Half Courses");
-    	}
-    	if (totalNQF < 420) {
-    		descriptions.add("Too few NQF credits");
-    		flag = false;
-    	}else {
-    		descriptions.add("Enough NQF Credits");
-    	}
-    	if (sciNQF < 276) {
-    		descriptions.add("Too few Science NQF credits");
-    		flag = false;
-    	}else {
-    		descriptions.add("Enough Science NQF Credits");
-    	}
-    	if (thirdNQF < 120) {
-    		descriptions.add("Too few Third Year NQF credits");
-    		flag = false;
-    	}else {
-    		descriptions.add("Enough Third Year NQF Credits");
-    	}
-    	for(String d : descriptions) {
-    		report += d + "\r\n";
-    	}
-    	Utils.print(descriptions.toArray(new String[0]));
-    	return flag;
+		if (fullCourses < 9) {
+			descriptions.add("Too few Full Courses");
+			flag = false;
+		} else {
+			descriptions.add("Enough Full Courses");
+		}
+		if (sciFullCourses < 6) {
+			descriptions.add("Too few Science Full Courses");
+			flag = false;
+		} else {
+			descriptions.add("Enough Science Full Courses");
+		}
+		if (seniorFullCourses < 4) {
+			descriptions.add("Too few Senior Full Courses");
+			flag = false;
+		} else {
+			descriptions.add("Enough Senior Full Courses");
+		}
+		if (seniorSciFullCourses < 3) {
+			descriptions.add("Too few Senior Science Full Courses");
+			flag = false;
+		} else {
+			descriptions.add("Enough Senior Science Full Courses");
+		}
+		if (thirdFullCourses < 2) {
+			descriptions.add("Too few Third Year Full Courses");
+			flag = false;
+		} else {
+			descriptions.add("Enough Third Year Full Courses");
+		}
+		if (s1y1 > 4 || s2y1 > 4) {
+			if (s1y1NQF > 72 || s2y1NQF > 72) {
+				descriptions.add("Too many First Year Half Courses");
+				flag = false;
+			}
+			descriptions.add("Enough First Year Half Courses");
+		} else {
+			descriptions.add("Enough First Year Half Courses");
+		}
+		if (s1y2 > 3 || s2y2 > 3 || s1y3 > 3 || s2y3 > 3) {
+			if (s1y2NQF > 72 || s2y2NQF > 72 || s1y3NQF > 72 || s2y3NQF > 72) {
+				descriptions.add("Too many Senior Year Half Courses");
+				flag = false;
+			}
+			descriptions.add("Enough Senior Year Half Courses");
+		} else {
+			descriptions.add("Enough Senior Year Half Courses");
+		}
+		if (totalNQF < 420) {
+			descriptions.add("Too few NQF credits");
+			flag = false;
+		} else {
+			descriptions.add("Enough NQF Credits");
+		}
+		if (sciNQF < 276) {
+			descriptions.add("Too few Science NQF credits");
+			flag = false;
+		} else {
+			descriptions.add("Enough Science NQF Credits");
+		}
+		if (thirdNQF < 120) {
+			descriptions.add("Too few Third Year NQF credits");
+			flag = false;
+		} else {
+			descriptions.add("Enough Third Year NQF Credits");
+		}
+		for (String d : descriptions) {
+			report += d + "\r\n";
+		}
+		Utils.print(descriptions.toArray(new String[0]));
+		return flag;
 	}
-	
-	//retrieve list of students who have the same courses
+
+	/* (non-Javadoc) Retrieve list of students who have the same courses
+	 * @see Database#getSimilarCourseStudents(java.lang.String)
+	 */
 	@Override
 	public String getSimilarCourseStudents(String minSimilarCourses) {
 		report += "** Performance Prediction **\r\n";
-		//define query to find students with 50% of the same courses
-		String similarCourseQuery = 
-				"select StudentID  from coursemarks cm \r\n" + 
-				"inner join courses c on c.CourseID = cm.CourseID\r\n" + 
-				"where c.CourseName in ("+ curriculum +")\r\n" + 
-				"group by StudentID\r\n" + 
-				"having count(StudentID) > "+ minSimilarCourses +";";
+		// define query to find students with 50% of the same courses
+		String similarCourseQuery = "select StudentID  from coursemarks cm \r\n"
+				+ "inner join courses c on c.CourseID = cm.CourseID\r\n" + "where c.CourseName in (" + curriculum
+				+ ")\r\n" + "group by StudentID\r\n" + "having count(StudentID) > " + minSimilarCourses + ";";
 		try {
 			// Find similar students which have taken at least 50% of the student's proposed courses
-			
 			// execute the query, and get a java resultset
-		    ResultSet similarCourseResult = st.executeQuery(similarCourseQuery);
-	        // iterate through the java resultset
-		    String temp = "";
-		    int count = 0;
-		    while (similarCourseResult.next()) {
-		    	temp = temp + similarCourseResult.getString("StudentID") + ",";
-		    	count++;
-		    }
-		    
-		    similarCourseStudents = temp.substring(0, temp.length() -1);
-		    similarCourseStudentsSize = Integer.toString(count);
-		    report += "Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum.\r\n";
-		    Utils.print(new String [] {"Found " + similarCourseStudentsSize + " past students who enrolled in similar courses to your curriculum."});
+			ResultSet similarCourseResult = st.executeQuery(similarCourseQuery);
+			// iterate through the java resultset
+			String temp = "";
+			int count = 0;
+			// record all the similar students and count the number of students returned
+			while (similarCourseResult.next()) {
+				temp = temp + similarCourseResult.getString("StudentID") + ",";
+				count++;
+			}
+			
+			// output results 
+			similarCourseStudents = temp.substring(0, temp.length() - 1);
+			similarCourseStudentsSize = Integer.toString(count);
+			report += "Found " + similarCourseStudentsSize
+					+ " past students who enrolled in similar courses to your curriculum.\r\n";
+			Utils.print(new String[] { "Found " + similarCourseStudentsSize
+					+ " past students who enrolled in similar courses to your curriculum." });
 			return similarCourseStudents;
-		}catch (Exception e) {
+		} catch (Exception e) {
 			System.out.println("Error finding SQL similar course students.");
 			return null;
 		}
 	}
 
-	//retrieve list of students who have the same marks
+	/* (non-Javadoc) Retrieve list of students who have the same marks
+	 * @see Database#getSimilarMarkStudents(java.lang.String)
+	 */
 	@Override
 	public String getSimilarMarkStudents(String similarCourseStudents) {
 		// Using students from above, find the students with NBT marks in similar range to student's input mark
-		String similarNBTMarkQuery = 
-				"Select StudentID, Mark, SubjectID from subjectmarks sm\r\n" + 
-				"where StudentID in ("+ similarCourseStudents +")\r\n" + 
-				"and sm.SubjectID in (4,5,6)\r\n" + 
-				"group by (StudentID)\r\n" + 
-				"having avg(Mark) > "+ LB +" and avg(Mark) < "+ UB +";";
-					      
+		String similarNBTMarkQuery = "Select StudentID, Mark, SubjectID from subjectmarks sm\r\n"
+				+ "where StudentID in (" + similarCourseStudents + ")\r\n" + "and sm.SubjectID in (4,5,6)\r\n"
+				+ "group by (StudentID)\r\n" + "having avg(Mark) > " + LB + " and avg(Mark) < " + UB + ";";
+
 		// Using students from above, find the students with average GPA marks in similar range to student's input mark
-		String similarGPAQuery = 
-				"Select StudentID from coursemarks cm \r\n" + 
-				"right join Courses c on c.CourseID = cm.CourseID\r\n" + 
-				"where StudentID in ("+ similarCourseStudents +")\r\n" + 
-				"and c.Year = "+ currentYear +"\r\n" + 
-				"group by (studentID) \r\n" + 
-				"having avg(cm.Mark) > "+ LB +" and avg(cm.Mark) < "+ UB +";";
+		String similarGPAQuery = "Select StudentID from coursemarks cm \r\n"
+				+ "right join Courses c on c.CourseID = cm.CourseID\r\n" + "where StudentID in ("
+				+ similarCourseStudents + ")\r\n" + "and c.Year = " + currentYear + "\r\n" + "group by (studentID) \r\n"
+				+ "having avg(cm.Mark) > " + LB + " and avg(cm.Mark) < " + UB + ";";
 		try {
 			ResultSet similarMarkResult;
-
-			if(currentYear.equals("0")) {
+			// if entering 1st year, use NBT query, else use GPA query
+			if (currentYear.equals("0")) {
 				similarMarkResult = st.executeQuery(similarNBTMarkQuery);
-			}else {
+			} else {
 				similarMarkResult = st.executeQuery(similarGPAQuery);
 			}
-			
-		    // iterate through the java resultset
-		    String temp = "";
-		    int count = 0;
-		    while (similarMarkResult.next()) {
-		    	temp = temp + similarMarkResult.getString("StudentID") + ",";
-		    	count++;
-		    }
 
-		    similarMarkStudents = temp.substring(0, temp.length() -1);
-		    similarMarkStudentsSize = Integer.toString(count);
-		    report += "Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + similarMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +").\r\n";
-		    Utils.print(new String [] {"Of " + similarCourseStudentsSize + " students enrolled in similar courses, " + similarMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("+ averageMark +")."});
+			// iterate through the java resultset to record results 
+			String temp = "";
+			int count = 0;
+			while (similarMarkResult.next()) {
+				temp = temp + similarMarkResult.getString("StudentID") + ",";
+				count++;
+			}
+			
+			// output results 
+			similarMarkStudents = temp.substring(0, temp.length() - 1);
+			similarMarkStudentsSize = Integer.toString(count);
+			report += "Of " + similarCourseStudentsSize + " students enrolled in similar courses, "
+					+ similarMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("
+					+ averageMark + ").\r\n";
+			Utils.print(new String[] { "Of " + similarCourseStudentsSize + " students enrolled in similar courses, "
+					+ similarMarkStudentsSize + " students achieved a " + inputMark + " mark similar to you ("
+					+ averageMark + ")." });
 			return similarMarkStudents;
-		}catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Error finding SQL similar mark students.");
 			System.out.println(similarGPAQuery);
@@ -569,36 +606,47 @@ public class MySQLDatabase implements Database {
 		}
 	}
 
-	//retrieve GPA of similar students
+	/* (non-Javadoc) Retrieve GPA of similar students
+	 * @see Database#predictGrade(java.lang.String)
+	 */
 	@Override
 	public void predictGrade(String similarMarkStudents) {
 		// Using the filtered list of students (similar course & marks), output their predicted next year performance
-		String predictedMarkQuery = 
-				"Select avg(Mark) as GPA, stddev(Mark) as standardDeviation from coursemarks cm \r\n" + 
-				"right join Courses c on c.CourseID = cm.CourseID\r\n" + 
-				"where StudentID in ("+ similarMarkStudents +")\r\n" + 
-				"and c.Year = "+ this.nextYear +" ;";
+		String predictedMarkQuery = "Select avg(Mark) as GPA, stddev(Mark) as standardDeviation from coursemarks cm \r\n"
+				+ "right join Courses c on c.CourseID = cm.CourseID\r\n" + "where StudentID in (" + similarMarkStudents
+				+ ")\r\n" + "and c.Year = " + this.nextYear + " ;";
 		try {
 			ResultSet predictedMarkResult = st.executeQuery(predictedMarkQuery);
+
+			// iterate through the java resultset to record result
+			while (predictedMarkResult.next()) {
+				GPA = predictedMarkResult.getString("GPA").substring(0, 2);
+				standardDeviation = predictedMarkResult.getString("standardDeviation").substring(0, 2);
+			}
 			
-		    // iterate through the java resultset
-		    while (predictedMarkResult.next()) {
-		    	GPA = predictedMarkResult.getString("GPA").substring(0, 2);
-		    	standardDeviation = predictedMarkResult.getString("standardDeviation").substring(0, 2);
-		    }
-		    report += "The average "+ predictedMark +" of " + similarMarkStudentsSize + " students with a "+ inputMark +" and curriculum similar to you is " + GPA + " with a standard deviation of " + standardDeviation + "\r\n";
-		    Utils.print(new String [] {"The average "+ predictedMark +" of " + similarMarkStudentsSize + " students with a "+ inputMark +" and curriculum similar to you is " + GPA + " with a standard deviation of " + standardDeviation });
-		}catch (Exception e) {
+			//output results
+			report += "The average " + predictedMark + " of " + similarMarkStudentsSize + " students with a "
+					+ inputMark + " and curriculum similar to you is " + GPA + " with a standard deviation of "
+					+ standardDeviation + "\r\n";
+			Utils.print(new String[] { "The average " + predictedMark + " of " + similarMarkStudentsSize
+					+ " students with a " + inputMark + " and curriculum similar to you is " + GPA
+					+ " with a standard deviation of " + standardDeviation });
+		} catch (Exception e) {
 			System.out.println("Error predicting SQL grade.");
 		}
 	}
-	
-	//close the db connection
+
+	/* (non-Javadoc) Close the db connection
+	 * @see Database#close()
+	 */
 	@Override
 	public void close() throws SQLException {
 		st.close();
 	}
 
+	/* (non-Javadoc) Return the database report
+	 * @see Database#getReport()
+	 */
 	@Override
 	public String getReport() {
 		return report;

@@ -1,10 +1,27 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * Utils class which stores methods which manipulate input and output
+ * @author Josh
+ *
+ */
 public class Utils {
 	
+	/**
+	 * Function to convert a Neo4j list to an Array representation
+	 * @param in A Neo4j query result string
+	 * @return The array version of a Neo4j list
+	 */
+	public static ArrayList<String> toList(String in){
+		String withoutBrackets = in.replace("[", "").replace("]", "").replace(" ", ""); // remove brackets and whitespace
+		ArrayList<String> newList = new ArrayList<String>(Arrays.asList(withoutBrackets.split(",")));
+		newList.remove(new String(""));
+		return newList;
+	}
+	
 	/** 
-	 * Formats an input curriculum correctly for insertion into queries
+	 * Formats a String[] array input curriculum correctly for insertion into queries
 	 * @param c the input curriculum array of form a, b, c
 	 * @return the formatted curriculum for insertion into queries of the form \"a\", \"b\", \"c\"
 	 */
@@ -13,6 +30,11 @@ public class Utils {
 		return temp.replace(",", "\",\"").replace(" ", "");
 	}
 	
+	/** 
+	 * Formats an ArrayList<String> input curriculum correctly for insertion into queries
+	 * @param c the input curriculum array of form a, b, c
+	 * @return the formatted curriculum for insertion into queries of the form \"a\", \"b\", \"c\"
+	 */
 	public static String formatCurriculum(ArrayList<String> c) {
 		String temp = "\"" +  c.toString().replace("[", "").replace("]", "") + "\"";
 		return temp.replace(",", "\",\"").replace(" ", "");
@@ -24,10 +46,23 @@ public class Utils {
 	 * @return 50% of the length of the courses
 	 */
 	public static String similarCourseCutoff (String crs) {
-		String[] courses = crs.split(" ");
+		String[] courses = crs.replace(" ", "").split(",");
 		ArrayList<String> lst = new ArrayList<String>(Arrays.asList(courses));
 		int length = (int) lst.size()/2;
 		return Integer.toString(length);
+	}
+	
+	/**
+	 * Function to calculate a student's average input mark
+	 * @param list A list of marks
+	 * @return The average of the list of marks
+	 */
+	public static int average(int[] list) {
+		int sum = 0;
+		for(int m : list) {
+			sum = sum + m;
+		}
+		return sum/list.length;
 	}
 	
 	/**
